@@ -1,0 +1,5 @@
+conda activate snakemake-tutorial
+
+snakemake --cores 1
+
+snakemake --dag | dot -Tpdf > dag.pdf
