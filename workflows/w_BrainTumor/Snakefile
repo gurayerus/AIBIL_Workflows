@@ -7,7 +7,7 @@ rule ALL:
     '''
     FIXME: For now a single target file is used to test different steps of the pipeline
     '''
-    input:"../../data/BTTest/Protocols/12_susan/AAAA_2007.01.21/AAAA_2007.01.21_lps_n4_rt1ce_rsri_brain_zscore_segmdm_tumor_n4_susan.nii.gz"
+    input:"../../data/BTTest/Protocols/TumorSusanFiltered/AAAA_2007.01.21/AAAA_2007.01.21_lps_n4_rt1ce_rsri_brain_zscore_segmdm_tumor_n4_susan.nii.gz"
 
 ruleorder: reorient_dti_img > reorient_img
     
@@ -21,9 +21,9 @@ rule reorient_dti_img:
         bval="../../data/{study}/RenamedNifti/{mrid}/{mrid}_dti.bval",
         bvec="../../data/{study}/RenamedNifti/{mrid}/{mrid}_dti.bvec"
     output:
-        dti="../../data/{study}/Protocols/01_reoriented/{mrid}/{mrid}_dti_lps.nii.gz",
-        bval="../../data/{study}/Protocols/01_reoriented/{mrid}/{mrid}_dti_lps.bval",
-        bvec="../../data/{study}/Protocols/01_reoriented/{mrid}/{mrid}_dti_lps.bvec"
+        dti="../../data/{study}/Protocols/ReorientedLPS/{mrid}/{mrid}_dti_lps.nii.gz",
+        bval="../../data/{study}/Protocols/ReorientedLPS/{mrid}/{mrid}_dti_lps.bval",
+        bvec="../../data/{study}/Protocols/ReorientedLPS/{mrid}/{mrid}_dti_lps.bvec"
     resources:
         mem_mb=8000,
     shell:
@@ -36,7 +36,7 @@ rule reorient_img:
     input:
         "../../data/{study}/RenamedNifti/{mrid}/{mrid}_{mod}.nii.gz"
     output:
-        "../../data/{study}/Protocols/01_reoriented/{mrid}/{mrid}_{mod}_lps.nii.gz"
+        "../../data/{study}/Protocols/ReorientedLPS/{mrid}/{mrid}_{mod}_lps.nii.gz"
     resources:
         mem_mb=8000,
     shell:
@@ -47,9 +47,9 @@ rule run_n4:
     N4 bias correction
     """
     input:
-        "../../data/{study}/Protocols/01_reoriented/{mrid}/{mrid}_{mod}_lps.nii.gz"
+        "../../data/{study}/Protocols/ReorientedLPS/{mrid}/{mrid}_{mod}_lps.nii.gz"
     output:
-        "../../data/{study}/Protocols/02_biascorr/{mrid}/{mrid}_{mod}_lps_n4.nii.gz"
+        "../../data/{study}/Protocols/BiasCorrected/{mrid}/{mrid}_{mod}_lps_n4.nii.gz"
     resources:
         mem_mb=8000,
     shell:
@@ -61,10 +61,10 @@ rule to_t1ce_calcmat:
     Matrix is calculated independently for different modalities
     """
     input:
-        img="../../data/{study}/Protocols/02_biascorr/{mrid}/{mrid}_{mod}_lps_n4.nii.gz",
-        ref="../../data/{study}/Protocols/02_biascorr/{mrid}/{mrid}_t1ce_lps_n4.nii.gz"
+        img="../../data/{study}/Protocols/BiasCorrected/{mrid}/{mrid}_{mod}_lps_n4.nii.gz",
+        ref="../../data/{study}/Protocols/BiasCorrected/{mrid}/{mrid}_t1ce_lps_n4.nii.gz"
     output:
-        "../../data/{study}/Protocols/03_aligned_t1ce/{mrid}/{mrid}_{mod}_lps_n4_rt1ce.mat"
+        "../../data/{study}/Protocols/AlignedToT1CE/{mrid}/{mrid}_{mod}_lps_n4_rt1ce.mat"
     resources:
         mem_mb=8000,
     shell:
@@ -75,11 +75,11 @@ rule to_t1ce_applymat:
     Apply matrix to align image to t1ce image (within subjects)
     """
     input:
-        img="../../data/{study}/Protocols/02_biascorr/{mrid}/{mrid}_{mod}_lps_n4.nii.gz",
-        ref="../../data/{study}/Protocols/02_biascorr/{mrid}/{mrid}_t1ce_lps_n4.nii.gz",
-        mat="../../data/{study}/Protocols/03_aligned_t1ce/{mrid}/{mrid}_{mod}_lps_n4_rt1ce.mat"
+        img="../../data/{study}/Protocols/BiasCorrected/{mrid}/{mrid}_{mod}_lps_n4.nii.gz",
+        ref="../../data/{study}/Protocols/BiasCorrected/{mrid}/{mrid}_t1ce_lps_n4.nii.gz",
+        mat="../../data/{study}/Protocols/AlignedToT1CE/{mrid}/{mrid}_{mod}_lps_n4_rt1ce.mat"
     output:
-        "../../data/{study}/Protocols/03_aligned_t1ce/{mrid}/{mrid}_{mod}_lps_n4_rt1ce.nii.gz"
+        "../../data/{study}/Protocols/AlignedToT1CE/{mrid}/{mrid}_{mod}_lps_n4_rt1ce.nii.gz"
     resources:
         mem_mb=8000,
     shell:
@@ -91,10 +91,10 @@ rule to_sri_calcmat:
     A single matrix is calculated only using the T1 modality
     """
     input:
-        img="../../data/{study}/Protocols/03_aligned_t1ce/{mrid}/{mrid}_t1_lps_n4_rt1ce.nii.gz",
+        img="../../data/{study}/Protocols/AlignedToT1CE/{mrid}/{mrid}_t1_lps_n4_rt1ce.nii.gz",
         ref="../../resources/templates/spgr_unstrip-RAI.nii.gz"
     output:
-        "../../data/{study}/Protocols/04_aligned_sri/{mrid}/{mrid}_t1_lps_n4_rt1ce_rsri.mat"
+        "../../data/{study}/Protocols/AlignedToAtlas/{mrid}/{mrid}_t1_lps_n4_rt1ce_rsri.mat"
     resources:
         mem_mb=8000,
     shell:
@@ -106,11 +106,11 @@ rule to_sri_applymat:
     All modalities use the same matrix from T1 registration to SRI
     """
     input:
-        img="../../data/{study}/Protocols/03_aligned_t1ce/{mrid}/{mrid}_{mod}_lps_n4_rt1ce.nii.gz",
+        img="../../data/{study}/Protocols/AlignedToT1CE/{mrid}/{mrid}_{mod}_lps_n4_rt1ce.nii.gz",
         ref="../../resources/templates/spgr_unstrip-RAI.nii.gz",
-        mat="../../data/{study}/Protocols/04_aligned_sri/{mrid}/{mrid}_t1_lps_n4_rt1ce_rsri.mat"
+        mat="../../data/{study}/Protocols/AlignedToAtlas/{mrid}/{mrid}_t1_lps_n4_rt1ce_rsri.mat"
     output:
-        "../../data/{study}/Protocols/04_aligned_sri/{mrid}/{mrid}_{mod}_lps_n4_rt1ce_rsri.nii.gz"
+        "../../data/{study}/Protocols/AlignedToAtlas/{mrid}/{mrid}_{mod}_lps_n4_rt1ce_rsri.nii.gz"
     resources:
         mem_mb=8000,
     shell:
@@ -121,12 +121,12 @@ rule run_dm_mask:
     Calculate deep_medic mask
     """
     input:
-        t1="../../data/{study}/Protocols/04_aligned_sri/{mrid}/{mrid}_t1_lps_n4_rt1ce_rsri.nii.gz",
-        t1ce="../../data/{study}/Protocols/04_aligned_sri/{mrid}/{mrid}_t1ce_lps_n4_rt1ce_rsri.nii.gz",
-        t2="../../data/{study}/Protocols/04_aligned_sri/{mrid}/{mrid}_t2_lps_n4_rt1ce_rsri.nii.gz",
-        fl="../../data/{study}/Protocols/04_aligned_sri/{mrid}/{mrid}_flair_lps_n4_rt1ce_rsri.nii.gz"
+        t1="../../data/{study}/Protocols/AlignedToAtlas/{mrid}/{mrid}_t1_lps_n4_rt1ce_rsri.nii.gz",
+        t1ce="../../data/{study}/Protocols/AlignedToAtlas/{mrid}/{mrid}_t1ce_lps_n4_rt1ce_rsri.nii.gz",
+        t2="../../data/{study}/Protocols/AlignedToAtlas/{mrid}/{mrid}_t2_lps_n4_rt1ce_rsri.nii.gz",
+        fl="../../data/{study}/Protocols/AlignedToAtlas/{mrid}/{mrid}_flair_lps_n4_rt1ce_rsri.nii.gz"
     output:
-        "../../data/{study}/Protocols/05_brainmask_deepmedic/{mrid}/{mrid}_t1_lps_n4_rt1ce_rsri_maskDM.nii.gz"
+        "../../data/{study}/Protocols/BrainMaskDeepMedic/{mrid}/{mrid}_t1_lps_n4_rt1ce_rsri_maskDM.nii.gz"
     resources:
         mem_mb=8000,
     shell:
@@ -138,9 +138,9 @@ rule run_ma_mask:
     FIXME: this step failed for me due to dependencies, so it's not used in later mask selection step for now
     """
     input:
-        "../../data/{study}/Protocols/04_aligned_sri/{mrid}/{mrid}_{mod}_lps_n4_rt1ce_rsri.nii.gz"
+        "../../data/{study}/Protocols/AlignedToAtlas/{mrid}/{mrid}_{mod}_lps_n4_rt1ce_rsri.nii.gz"
     output:
-        "../../data/{study}/Protocols/06_brainmask_brainmage/{mrid}/{mrid}_{mod}_lps_n4_rt1ce_rsri_maskMA.nii.gz"
+        "../../data/{study}/Protocols/BrainMaskBrainMAGE/{mrid}/{mrid}_{mod}_lps_n4_rt1ce_rsri_maskMA.nii.gz"
     resources:
         mem_mb=8000,
     shell:
@@ -152,11 +152,11 @@ rule select_mask:
     FIXME: THIS STEP IS NORMALLY DONE MANUALLY (for now the script just selects the first input as the output mask)
     """
     input:
-        m1="../../data/{study}/Protocols/05_brainmask_deepmedic/{mrid}/{mrid}_t1_lps_n4_rt1ce_rsri_maskDM.nii.gz",
-        #m2="../../data/{study}/Protocols/06_brainmask_brainmage/{mrid}/{mrid}_t1_lps_n4_rt1ce_rsri_maskMA.nii.gz",
-        #m3="../../data/{study}/Protocols/06_brainmask_brainmage/{mrid}/{mrid}_t1ce_lps_n4_rt1ce_rsri_maskMA.nii.gz"        
+        m1="../../data/{study}/Protocols/BrainMaskDeepMedic/{mrid}/{mrid}_t1_lps_n4_rt1ce_rsri_maskDM.nii.gz",
+        #m2="../../data/{study}/Protocols/BrainMaskBrainMAGE/{mrid}/{mrid}_t1_lps_n4_rt1ce_rsri_maskMA.nii.gz",
+        #m3="../../data/{study}/Protocols/BrainMaskBrainMAGE/{mrid}/{mrid}_t1ce_lps_n4_rt1ce_rsri_maskMA.nii.gz"        
     output:
-        "../../data/{study}/Protocols/07_skullstripped/{mrid}/{mrid}_brainmask.nii.gz"
+        "../../data/{study}/Protocols/BrainMaskFinal/{mrid}/{mrid}_brainmask.nii.gz"
     resources:
         mem_mb=8000,
     shell:
@@ -168,10 +168,10 @@ rule apply_mask:
     Apply brain mask to images
     """
     input:
-        img="../../data/{study}/Protocols/04_aligned_sri/{mrid}/{mrid}_{mod}_lps_n4_rt1ce_rsri.nii.gz",
-        mask="../../data/{study}/Protocols/07_skullstripped/{mrid}/{mrid}_brainmask.nii.gz"
+        img="../../data/{study}/Protocols/AlignedToAtlas/{mrid}/{mrid}_{mod}_lps_n4_rt1ce_rsri.nii.gz",
+        mask="../../data/{study}/Protocols/BrainMaskFinal/{mrid}/{mrid}_brainmask.nii.gz"
     output:
-        "../../data/{study}/Protocols/07_skullstripped/{mrid}/{mrid}_{mod}_lps_n4_rt1ce_rsri_brain.nii.gz"
+        "../../data/{study}/Protocols/BrainMaskFinal/{mrid}/{mrid}_{mod}_lps_n4_rt1ce_rsri_brain.nii.gz"
     resources:
         mem_mb=8000,
     shell:
@@ -182,9 +182,9 @@ rule zscore_img:
     Normalize images usinf z-score transform
     """
     input:
-        "../../data/{study}/Protocols/07_skullstripped/{mrid}/{mrid}_{mod}_lps_n4_rt1ce_rsri_brain.nii.gz"
+        "../../data/{study}/Protocols/BrainMaskFinal/{mrid}/{mrid}_{mod}_lps_n4_rt1ce_rsri_brain.nii.gz"
     output:
-        "../../data/{study}/Protocols/08_normalized/{mrid}/{mrid}_{mod}_lps_n4_rt1ce_rsri_brain_zscore.nii.gz"
+        "../../data/{study}/Protocols/NormalizedImages/{mrid}/{mrid}_{mod}_lps_n4_rt1ce_rsri_brain_zscore.nii.gz"
     resources:
         mem_mb=8000,
     shell:
@@ -196,12 +196,12 @@ rule dm_seg:
     FIXME: this step failed for me due to dependencies
     """
     input:
-        t1="../../data/{study}/Protocols/08_normalized/{mrid}/{mrid}_t1_lps_n4_rt1ce_rsri_brain_zscore.nii.gz",
-        t1ce="../../data/{study}/Protocols/08_normalized/{mrid}/{mrid}_t1ce_lps_n4_rt1ce_rsri_brain_zscore.nii.gz",
-        t2="../../data/{study}/Protocols/08_normalized/{mrid}/{mrid}_t2_lps_n4_rt1ce_rsri_brain_zscore.nii.gz",
-        fl="../../data/{study}/Protocols/08_normalized/{mrid}/{mrid}_flair_lps_n4_rt1ce_rsri_brain_zscore.nii.gz",
+        t1="../../data/{study}/Protocols/NormalizedImages/{mrid}/{mrid}_t1_lps_n4_rt1ce_rsri_brain_zscore.nii.gz",
+        t1ce="../../data/{study}/Protocols/NormalizedImages/{mrid}/{mrid}_t1ce_lps_n4_rt1ce_rsri_brain_zscore.nii.gz",
+        t2="../../data/{study}/Protocols/NormalizedImages/{mrid}/{mrid}_t2_lps_n4_rt1ce_rsri_brain_zscore.nii.gz",
+        fl="../../data/{study}/Protocols/NormalizedImages/{mrid}/{mrid}_flair_lps_n4_rt1ce_rsri_brain_zscore.nii.gz",
     output:
-        "../../data/{study}/Protocols/09_segmented_deepmedic/{mrid}/{mrid}_lps_n4_rt1ce_rsri_brain_zscore_segmdm.nii.gz"
+        "../../data/{study}/Protocols/SegmentedDeepMedic/{mrid}/{mrid}_lps_n4_rt1ce_rsri_brain_zscore_segmdm.nii.gz"
     resources:
         mem_mb=8000,
     shell:
@@ -213,9 +213,9 @@ rule mask_tumor:
     FIXME: this is a placeholder for now, not implemented yet
     """
     input:
-        "../../data/{study}/Protocols/09_segmented_deepmedic/{mrid}/{mrid}_lps_n4_rt1ce_rsri_brain_zscore_segmdm.nii.gz"
+        "../../data/{study}/Protocols/SegmentedDeepMedic/{mrid}/{mrid}_lps_n4_rt1ce_rsri_brain_zscore_segmdm.nii.gz"
     output:
-        "../../data/{study}/Protocols/10_segmented_tumor/{mrid}/{mrid}_lps_n4_rt1ce_rsri_brain_zscore_segmdm_tumor.nii.gz"
+        "../../data/{study}/Protocols/SegmentedTumor/{mrid}/{mrid}_lps_n4_rt1ce_rsri_brain_zscore_segmdm_tumor.nii.gz"
     resources:
         mem_mb=8000,
     shell:
@@ -227,9 +227,9 @@ rule n4_tumor:
     FIXME: this is a placeholder for now, not implemented yet
     """
     input:
-        "../../data/{study}/Protocols/10_segmented_tumor/{mrid}/{mrid}_lps_n4_rt1ce_rsri_brain_zscore_segmdm_tumor.nii.gz"
+        "../../data/{study}/Protocols/SegmentedTumor/{mrid}/{mrid}_lps_n4_rt1ce_rsri_brain_zscore_segmdm_tumor.nii.gz"
     output:
-        "../../data/{study}/Protocols/11_tumor_n4/{mrid}/{mrid}_lps_n4_rt1ce_rsri_brain_zscore_segmdm_tumor_n4.nii.gz"
+        "../../data/{study}/Protocols/TumorBiasCorrected/{mrid}/{mrid}_lps_n4_rt1ce_rsri_brain_zscore_segmdm_tumor_n4.nii.gz"
     resources:
         mem_mb=8000,
     shell:
@@ -241,9 +241,9 @@ rule run_susan:
     FIXME: this is a placeholder for now, not implemented yet
     """
     input:
-        "../../data/{study}/Protocols/11_tumor_n4/{mrid}/{mrid}_lps_n4_rt1ce_rsri_brain_zscore_segmdm_tumor_n4.nii.gz"
+        "../../data/{study}/Protocols/TumorBiasCorrected/{mrid}/{mrid}_lps_n4_rt1ce_rsri_brain_zscore_segmdm_tumor_n4.nii.gz"
     output:
-        "../../data/{study}/Protocols/12_susan/{mrid}/{mrid}_lps_n4_rt1ce_rsri_brain_zscore_segmdm_tumor_n4_susan.nii.gz"
+        "../../data/{study}/Protocols/TumorSusanFiltered/{mrid}/{mrid}_lps_n4_rt1ce_rsri_brain_zscore_segmdm_tumor_n4_susan.nii.gz"
         
     resources:
         mem_mb=8000,

@@ -7,9 +7,7 @@ LIST_MRID = list(DICT_BLID.keys())
 
 
 rule ALL:
-    #input:"../protocols/MUSE_BL/sub-1000173_ses-NAPFU03/sub-1000173_ses-NAPFU03_T1_LPS_N4_brain_muse-ss_Mean_fastbc_muse.nii.gz"
-    #input:"../protocols/MUSE_BL/sub-1000173_ses-NAPBL00/sub-1000173_ses-NAPBL00_T1_LPS_N4_brain_muse-#ss_Mean_fastbc_muse.nii.gz"
-    input:"../protocols/MUSE_4D/sub-1000173_ses-NAPBL00/sub-1000173_ses-NAPBL00_T1_LPS_N4_brain_muse-ss_Mean_fastbc_muse.nii.gz"
+    input:expand("../../data/{study}/Protocols/MUSE_4D/{mrid}/{mrid}_T1_LPS_N4_brain_muse-ss_Mean_fastbc_muse.nii.gz", study = ['MUSETest'], mrid = ['OAS30001_MR_d0129']
 
 
 rule reorientLPS:
@@ -17,9 +15,9 @@ rule reorientLPS:
     Reorient a 3D image to LPS orientation
     """
     input:
-        "../input/data/{MRID}/{MRID}_{mod}.nii.gz"
+        "../input/data/{mrid}/{mrid}_{mod}.nii.gz"
     output:
-        "../protocols/ReOrientedLPS/{MRID}/{MRID}_{mod}_LPS.nii.gz"
+        "../../data/{study}/Protocols/ReOrientedLPS/{mrid}/{mrid}_{mod}_LPS.nii.gz"
     resources:
         mem_mb=8000,
     shell:
@@ -30,9 +28,9 @@ rule biascorr_N4:
     N4 bias correction
     """
     input:
-        "../protocols/ReOrientedLPS/{MRID}/{MRID}_{mod}_LPS.nii.gz"
+        "../../data/{study}/Protocols/ReOrientedLPS/{mrid}/{mrid}_{mod}_LPS.nii.gz"
     output:
-        "../protocols/BiasCorrected/{MRID}/{MRID}_{mod}_LPS_N4.nii.gz"
+        "../../data/{study}/Protocols/BiasCorrected/{mrid}/{mrid}_{mod}_LPS_N4.nii.gz"
     resources:
         mem_mb=8000,
     shell:
@@ -44,9 +42,9 @@ rule bmask_MUSE:
     - Applied to all images, both BL and FU
     """
     input:
-        "../protocols/BiasCorrected/{MRID}/{MRID}_T1_LPS_N4.nii.gz"
+        "../../data/{study}/Protocols/BiasCorrected/{mrid}/{mrid}_T1_LPS_N4.nii.gz"
     output:
-        "../protocols/Skull-Stripped/{MRID}/{MRID}_T1_LPS_N4_brainmask_muse-ss.nii.gz",
+        "../../data/{study}/Protocols/Skull-Stripped/{mrid}/{mrid}_T1_LPS_N4_brainmask_muse-ss.nii.gz",
     resources:
         mem_mb=8000
     shell:
@@ -59,14 +57,14 @@ rule bmask_MUSE_4D:
     - For BL images an image is warped to itself to calculate the 4D mask; this looks redundant
     """
     input:
-        img="../protocols/BiasCorrected/{MRID}/{MRID}_T1_LPS_N4.nii.gz",
-        mask="../protocols/Skull-Stripped/{MRID}/{MRID}_T1_LPS_N4_brainmask_muse-ss.nii.gz",
-        blimg = lambda wildcards : "../protocols/BiasCorrected/" + DICT_BLID[wildcards.MRID] + "/" + DICT_BLID[wildcards.MRID] + "_T1_LPS_N4.nii.gz",
-        blmask = lambda wildcards : "../protocols/Skull-Stripped/" + DICT_BLID[wildcards.MRID] + "/" + DICT_BLID[wildcards.MRID] + "_T1_LPS_N4_brainmask_muse-ss.nii.gz"
+        img="../../data/{study}/Protocols/BiasCorrected/{mrid}/{mrid}_T1_LPS_N4.nii.gz",
+        mask="../../data/{study}/Protocols/Skull-Stripped/{mrid}/{mrid}_T1_LPS_N4_brainmask_muse-ss.nii.gz",
+        blimg = lambda wildcards : "../../data/{study}/Protocols/BiasCorrected/" + DICT_BLID[wildcards.MRID] + "/" + DICT_BLID[wildcards.MRID] + "_T1_LPS_N4.nii.gz",
+        blmask = lambda wildcards : "../../data/{study}/Protocols/Skull-Stripped/" + DICT_BLID[wildcards.MRID] + "/" + DICT_BLID[wildcards.MRID] + "_T1_LPS_N4_brainmask_muse-ss.nii.gz"
     #params:
         #blid=lambda wildcards:DICT_BLID[wildcards.MRID]
     output:
-        "../protocols/Skull-Stripped_4D/{MRID}/{MRID}_T1_LPS_N4_brain_muse-ss_Mean.nii.gz"
+        "../../data/{study}/Protocols/Skull-Stripped_4D/{mrid}/{mrid}_T1_LPS_N4_brain_muse-ss_Mean.nii.gz"
     resources:
         mem_mb=8000
     shell:
@@ -77,11 +75,11 @@ rule bmask_T1T2:
     T2 based skull stripping
     """
     input:
-        t1="../protocols/BiasCorrected/{MRID}/{MRID}_T1_LPS_N4.nii.gz",
-        t2="../protocols/BiasCorrected/{MRID}/{MRID}_T2_LPS_N4.nii.gz",
-        bmask="../protocols/Skull-Stripped_4D/{MRID}/{MRID}_T1_LPS_N4_brain_muse-ss_Mean.nii.gz"
+        t1="../../data/{study}/Protocols/BiasCorrected/{mrid}/{mrid}_T1_LPS_N4.nii.gz",
+        t2="../../data/{study}/Protocols/BiasCorrected/{mrid}/{mrid}_T2_LPS_N4.nii.gz",
+        bmask="../../data/{study}/Protocols/Skull-Stripped_4D/{mrid}/{mrid}_T1_LPS_N4_brain_muse-ss_Mean.nii.gz"
     output:
-        "../protocols/Skull-Stripped_T2/{MRID}/{MRID}_T1_LPS_N4_brainmask_muse-ss_Mean_ICV.nii.gz"
+        "../../data/{study}/Protocols/Skull-Stripped_T2/{mrid}/{mrid}_T1_LPS_N4_brainmask_muse-ss_Mean_ICV.nii.gz"
     resources:
         mem_mb=8000,
     shell:
@@ -92,9 +90,9 @@ rule biascorr_FAST:
     FAST bias correction
     """
     input:
-        "../protocols/Skull-Stripped_4D/{MRID}/{MRID}_T1_LPS_N4_brain_muse-ss_Mean.nii.gz"
+        "../../data/{study}/Protocols/Skull-Stripped_4D/{mrid}/{mrid}_T1_LPS_N4_brain_muse-ss_Mean.nii.gz"
     output:
-        "../protocols/fastbc/{MRID}/{MRID}_T1_LPS_N4_brain_muse-ss_Mean_fastbc.nii.gz"
+        "../../data/{study}/Protocols/fastbc/{mrid}/{mrid}_T1_LPS_N4_brain_muse-ss_Mean_fastbc.nii.gz"
     resources:
         mem_mb=8000,
     shell:
@@ -105,9 +103,9 @@ rule MUSE_BL:
     Run MUSE; applied only to BL images
     """
     input:
-        "../protocols/fastbc/{MRID}/{MRID}_T1_LPS_N4_brain_muse-ss_Mean_fastbc.nii.gz"
+        "../../data/{study}/Protocols/fastbc/{mrid}/{mrid}_T1_LPS_N4_brain_muse-ss_Mean_fastbc.nii.gz"
     output:
-        "../protocols/MUSE_BL/{MRID}/{MRID}_{mod}_LPS_N4_brain_muse-ss_Mean_fastbc_muse.nii.gz"
+        "../../data/{study}/Protocols/MUSE_BL/{mrid}/{mrid}_{mod}_LPS_N4_brain_muse-ss_Mean_fastbc_muse.nii.gz"
     resources:
         mem_mb=8000,
     shell:
@@ -120,13 +118,13 @@ rule MUSE_4D:
     - For BL images an image is warped to itself to calculate the 4D ROIs; this looks redundant    
     """
     input:
-        img="../protocols/fastbc/{MRID}/{MRID}_T1_LPS_N4_brain_muse-ss_Mean_fastbc.nii.gz",
-        blimg = lambda wildcards: "../protocols/fastbc/" + DICT_BLID[wildcards.MRID] + "/" + DICT_BLID[wildcards.MRID] + "_T1_LPS_N4_brain_muse-ss_Mean_fastbc.nii.gz",
-        blseg = lambda wildcards: "../protocols/MUSE_BL/" + DICT_BLID[wildcards.MRID] + "/" + DICT_BLID[wildcards.MRID] + "_T1_LPS_N4_brain_muse-ss_Mean_fastbc_muse.nii.gz"
+        img="../../data/{study}/Protocols/fastbc/{mrid}/{mrid}_T1_LPS_N4_brain_muse-ss_Mean_fastbc.nii.gz",
+        blimg = lambda wildcards: "../../data/{study}/Protocols/fastbc/" + DICT_BLID[wildcards.MRID] + "/" + DICT_BLID[wildcards.MRID] + "_T1_LPS_N4_brain_muse-ss_Mean_fastbc.nii.gz",
+        blseg = lambda wildcards: "../../data/{study}/Protocols/MUSE_BL/" + DICT_BLID[wildcards.MRID] + "/" + DICT_BLID[wildcards.MRID] + "_T1_LPS_N4_brain_muse-ss_Mean_fastbc_muse.nii.gz"
     params:
         BLID=lambda wildcards:DICT_BLID[wildcards.MRID]
     output:
-        "../protocols/MUSE_4D/{MRID}/{MRID}_T1_LPS_N4_brain_muse-ss_Mean_fastbc_muse.nii.gz"
+        "../../data/{study}/Protocols/MUSE_4D/{mrid}/{mrid}_T1_LPS_N4_brain_muse-ss_Mean_fastbc_muse.nii.gz"
     resources:
         mem_mb=8000
     shell:
