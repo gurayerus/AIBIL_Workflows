@@ -1,13 +1,16 @@
-import pandas as pd
 
-df = pd.read_csv('../lists/IDList.csv')
+localrules: reorientLPS
+
+import pandas as pd
+df = pd.read_csv('../../data/MUSETest/Lists/IDList.csv')
 DICT_BLID = dict(zip(df['MRID'], df['BLID']))
 LIST_MRID = list(DICT_BLID.keys())
 ##BLIDS = ['OAS30001_MR_d0129', 'OAS30002_MR_d0371']
 
 
 rule ALL:
-    input:expand("../../data/{study}/Protocols/MUSE_4D/{mrid}/{mrid}_T1_LPS_N4_brain_muse-ss_Mean_fastbc_muse.nii.gz", study = ['MUSETest'], mrid = ['OAS30001_MR_d0129']
+    #input:expand("../../data/{study}/Protocols/MUSE_4D/{mrid}/{mrid}_T1_LPS_N4_brain_muse-ss_Mean_fastbc_muse.nii.gz", study = ['MUSETest'], mrid = ['OAS30001_MR_d0129'])
+    input:expand("../../data/{study}/Protocols/Skull-Stripped/{mrid}/{mrid}_T1_LPS_N4_brainmask_muse-ss.nii.gz", study = ['MUSETest'], mrid = ['OAS30001_MR_d0129'])
 
 
 rule reorientLPS:
@@ -15,13 +18,13 @@ rule reorientLPS:
     Reorient a 3D image to LPS orientation
     """
     input:
-        "../input/data/{mrid}/{mrid}_{mod}.nii.gz"
+        "../../data/{study}/Data/RenamedNifti/{mrid}/{mrid}_{mod}.nii.gz"
     output:
         "../../data/{study}/Protocols/ReOrientedLPS/{mrid}/{mrid}_{mod}_LPS.nii.gz"
     resources:
         mem_mb=8000,
     shell:
-        "bash ./utils/run_reorientLPS.sh {input} {output}"
+        "bash ./utils/util_reorientLPS.sh {input} {output}"
 
 rule biascorr_N4:
     """
@@ -34,7 +37,7 @@ rule biascorr_N4:
     resources:
         mem_mb=8000,
     shell:
-        "bash ./utils/run_biascorr_N4.sh {input} {output}"
+        "bash ./utils/util_biascorr_N4.sh {input} {output}"
 
 rule bmask_MUSE:
     """
@@ -46,9 +49,9 @@ rule bmask_MUSE:
     output:
         "../../data/{study}/Protocols/Skull-Stripped/{mrid}/{mrid}_T1_LPS_N4_brainmask_muse-ss.nii.gz",
     resources:
-        mem_mb=8000
+        mem_mb=32000
     shell:
-        "bash ./utils/run_bmask_MUSE.sh {input} {output}"
+        "bash ./utils/util_bmask_MUSE.sh {input} {output}"
 
 rule bmask_MUSE_4D:
     """
@@ -59,16 +62,16 @@ rule bmask_MUSE_4D:
     input:
         img="../../data/{study}/Protocols/BiasCorrected/{mrid}/{mrid}_T1_LPS_N4.nii.gz",
         mask="../../data/{study}/Protocols/Skull-Stripped/{mrid}/{mrid}_T1_LPS_N4_brainmask_muse-ss.nii.gz",
-        blimg = lambda wildcards : "../../data/{study}/Protocols/BiasCorrected/" + DICT_BLID[wildcards.MRID] + "/" + DICT_BLID[wildcards.MRID] + "_T1_LPS_N4.nii.gz",
-        blmask = lambda wildcards : "../../data/{study}/Protocols/Skull-Stripped/" + DICT_BLID[wildcards.MRID] + "/" + DICT_BLID[wildcards.MRID] + "_T1_LPS_N4_brainmask_muse-ss.nii.gz"
+        blimg = lambda wildcards : "../../data/{study}/Protocols/BiasCorrected/" + DICT_BLID[wildcards.mrid] + "/" + DICT_BLID[wildcards.mrid] + "_T1_LPS_N4.nii.gz",
+        blmask = lambda wildcards : "../../data/{study}/Protocols/Skull-Stripped/" + DICT_BLID[wildcards.mrid] + "/" + DICT_BLID[wildcards.mrid] + "_T1_LPS_N4_brainmask_muse-ss.nii.gz"
     #params:
-        #blid=lambda wildcards:DICT_BLID[wildcards.MRID]
+        #blid=lambda wildcards:DICT_BLID[wildcards.mrid]
     output:
         "../../data/{study}/Protocols/Skull-Stripped_4D/{mrid}/{mrid}_T1_LPS_N4_brain_muse-ss_Mean.nii.gz"
     resources:
         mem_mb=8000
     shell:
-        "bash ./utils/run_bmask_MUSE_4D.sh {input} {output}"
+        "bash ./utils/util_bmask_MUSE_4D.sh {input} {output}"
 
 rule bmask_T1T2:
     """
@@ -83,7 +86,7 @@ rule bmask_T1T2:
     resources:
         mem_mb=8000,
     shell:
-        "bash ./utils/run_bmask_T1T2.sh {input} {output}"
+        "bash ./utils/util_bmask_T1T2.sh {input} {output}"
 
 rule biascorr_FAST:
     """
@@ -96,7 +99,7 @@ rule biascorr_FAST:
     resources:
         mem_mb=8000,
     shell:
-        "bash ./utils/run_biascorr_FAST.sh {input} {output}"
+        "bash ./utils/util_biascorr_FAST.sh {input} {output}"
         
 rule MUSE_BL:
     """
@@ -109,7 +112,7 @@ rule MUSE_BL:
     resources:
         mem_mb=8000,
     shell:
-        "bash ./utils/run_MUSE.sh {input} {output}"
+        "bash ./utils/util_MUSE.sh {input} {output}"
 
 rule MUSE_4D:
     """
@@ -119,14 +122,14 @@ rule MUSE_4D:
     """
     input:
         img="../../data/{study}/Protocols/fastbc/{mrid}/{mrid}_T1_LPS_N4_brain_muse-ss_Mean_fastbc.nii.gz",
-        blimg = lambda wildcards: "../../data/{study}/Protocols/fastbc/" + DICT_BLID[wildcards.MRID] + "/" + DICT_BLID[wildcards.MRID] + "_T1_LPS_N4_brain_muse-ss_Mean_fastbc.nii.gz",
-        blseg = lambda wildcards: "../../data/{study}/Protocols/MUSE_BL/" + DICT_BLID[wildcards.MRID] + "/" + DICT_BLID[wildcards.MRID] + "_T1_LPS_N4_brain_muse-ss_Mean_fastbc_muse.nii.gz"
+        blimg = lambda wildcards: "../../data/{study}/Protocols/fastbc/" + DICT_BLID[wildcards.mrid] + "/" + DICT_BLID[wildcards.mrid] + "_T1_LPS_N4_brain_muse-ss_Mean_fastbc.nii.gz",
+        blseg = lambda wildcards: "../../data/{study}/Protocols/MUSE_BL/" + DICT_BLID[wildcards.mrid] + "/" + DICT_BLID[wildcards.mrid] + "_T1_LPS_N4_brain_muse-ss_Mean_fastbc_muse.nii.gz"
     params:
-        BLID=lambda wildcards:DICT_BLID[wildcards.MRID]
+        BLID=lambda wildcards:DICT_BLID[wildcards.mrid]
     output:
         "../../data/{study}/Protocols/MUSE_4D/{mrid}/{mrid}_T1_LPS_N4_brain_muse-ss_Mean_fastbc_muse.nii.gz"
     resources:
         mem_mb=8000
     shell:
-        "bash ./utils/run_MUSE_4D.sh {input} {output} {wildcards.MRID} {params.BLID}"
+        "bash ./utils/util_MUSE_4D.sh {input} {output} {wildcards.mrid} {params.BLID}"
         
