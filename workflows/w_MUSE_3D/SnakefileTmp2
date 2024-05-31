@@ -1,0 +1,25 @@
+BLIDS = ['OAS30001_MR_d0129', 'OAS30001_MR_d0757', 'OAS30002_MR_d0371']
+
+import pandas as pd
+
+df = pd.read_csv('../lists/IDList.csv')
+bldict = dict(zip(df['MRID'], df['BLID']))
+
+
+rule ALL:
+    input:"../protocols/ReOrientedLPSTmp/OAS30001_MR_d0757/OAS30001_MR_d0757_T1_LPS.nii.gz"
+
+rule reorientLPS:
+    """
+    Reorient a 3D image to LPS orientation
+    """
+    input:
+        "../input/data/{sample}/{sample}_T1.nii.gz"
+    params:
+        blid=lambda wildcards: bldict[wildcards.sample]
+    output:
+        "../protocols/ReOrientedLPSTmp/{sample}/{sample}_T1_LPS.nii.gz"
+    resources:
+        mem_mb=8000,
+    shell:
+        "(mkdir -pv ../protocols/ReOrientedLPSTmp/{wildcards.sample}; echo {params.blid}; echo {input};  cp {input} {output})"
