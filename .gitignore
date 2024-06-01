@@ -17,6 +17,7 @@ Temp/
 # Data dirs
 input/
 data/
+resources/
 
 # C extensions
 *.so

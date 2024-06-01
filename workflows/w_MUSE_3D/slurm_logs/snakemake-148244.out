@@ -1,0 +1,27 @@
+Building DAG of jobs...
+SLURM run ID: cc695bf4-2e68-43b5-b211-30720e1175c1
+Using shell: /usr/bin/bash
+Provided remote nodes: 10
+Job stats:
+job           count
+----------  -------
+ALL               1
+bmask_MUSE        1
+total             2
+
+Select jobs to execute...
+Execute 1 jobs...
+
+[Sat Jun  1 12:51:53 2024]
+rule bmask_MUSE:
+    input: ../../data/MUSETest/Protocols/BiasCorrected/OAS30001_MR_d0129/OAS30001_MR_d0129_T1_LPS_N4.nii.gz, ../../resources/Container/CBICApipeline_centos7.sif
+    output: ../../data/MUSETest/Protocols/Skull-Stripped/OAS30001_MR_d0129/OAS30001_MR_d0129_T1_LPS_N4_brainmask_muse-ss.nii.gz
+    jobid: 1
+    reason: Missing output files: ../../data/MUSETest/Protocols/Skull-Stripped/OAS30001_MR_d0129/OAS30001_MR_d0129_T1_LPS_N4_brainmask_muse-ss.nii.gz
+    wildcards: study=MUSETest, mrid=OAS30001_MR_d0129
+    resources: tmpdir=<TBD>, mem_mb=32000, mem_mib=30518
+
+No SLURM account given, trying to guess.
+Guessed SLURM account: davatzic
+No wall time information given. This might or might not work on your cluster. If not, specify the resource runtime in your rule or as a reasonable default via --default-resources.
+Job 1 has been submitted with SLURM jobid 148245 (log: /gpfs/fs001/cbica/home/erusg/GitHub/AIBIL_Workflows/workflows/w_MUSE_3D/.snakemake/slurm_logs/rule_bmask_MUSE/_MUSETest_OAS30001_MR_d0129/148245.log).

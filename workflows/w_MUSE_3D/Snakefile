@@ -1,17 +1,9 @@
 
-localrules: reorientLPS
-
-import pandas as pd
-df = pd.read_csv('../../data/MUSETest/Lists/IDList.csv')
-DICT_BLID = dict(zip(df['MRID'], df['BLID']))
-LIST_MRID = list(DICT_BLID.keys())
-##BLIDS = ['OAS30001_MR_d0129', 'OAS30002_MR_d0371']
-
+localrules: reorientLPS, bmask_T1T2
 
 rule ALL:
     #input:expand("../../data/{study}/Protocols/MUSE_4D/{mrid}/{mrid}_T1_LPS_N4_brain_muse-ss_Mean_fastbc_muse.nii.gz", study = ['MUSETest'], mrid = ['OAS30001_MR_d0129'])
     input:expand("../../data/{study}/Protocols/Skull-Stripped/{mrid}/{mrid}_T1_LPS_N4_brainmask_muse-ss.nii.gz", study = ['MUSETest'], mrid = ['OAS30001_MR_d0129'])
-
 
 rule reorientLPS:
     """
@@ -45,33 +37,14 @@ rule bmask_MUSE:
     - Applied to all images, both BL and FU
     """
     input:
-        "../../data/{study}/Protocols/BiasCorrected/{mrid}/{mrid}_T1_LPS_N4.nii.gz"
+        fin="../../data/{study}/Protocols/BiasCorrected/{mrid}/{mrid}_T1_LPS_N4.nii.gz",
+        cont="../../resources/Container/CBICApipeline_centos7.sif"
     output:
         "../../data/{study}/Protocols/Skull-Stripped/{mrid}/{mrid}_T1_LPS_N4_brainmask_muse-ss.nii.gz",
     resources:
         mem_mb=32000
     shell:
-        "bash ./utils/util_bmask_MUSE.sh {input} {output}"
-
-rule bmask_MUSE_4D:
-    """
-    Use baseline MUSE bmasks to calculate 4D bmask
-    - Applied to all images both BL and FU
-    - For BL images an image is warped to itself to calculate the 4D mask; this looks redundant
-    """
-    input:
-        img="../../data/{study}/Protocols/BiasCorrected/{mrid}/{mrid}_T1_LPS_N4.nii.gz",
-        mask="../../data/{study}/Protocols/Skull-Stripped/{mrid}/{mrid}_T1_LPS_N4_brainmask_muse-ss.nii.gz",
-        blimg = lambda wildcards : "../../data/{study}/Protocols/BiasCorrected/" + DICT_BLID[wildcards.mrid] + "/" + DICT_BLID[wildcards.mrid] + "_T1_LPS_N4.nii.gz",
-        blmask = lambda wildcards : "../../data/{study}/Protocols/Skull-Stripped/" + DICT_BLID[wildcards.mrid] + "/" + DICT_BLID[wildcards.mrid] + "_T1_LPS_N4_brainmask_muse-ss.nii.gz"
-    #params:
-        #blid=lambda wildcards:DICT_BLID[wildcards.mrid]
-    output:
-        "../../data/{study}/Protocols/Skull-Stripped_4D/{mrid}/{mrid}_T1_LPS_N4_brain_muse-ss_Mean.nii.gz"
-    resources:
-        mem_mb=8000
-    shell:
-        "bash ./utils/util_bmask_MUSE_4D.sh {input} {output}"
+        "bash ./utils/util_bmask_MUSE_singularity_wrapper.sh {input} {output}"
 
 rule bmask_T1T2:
     """
@@ -80,13 +53,20 @@ rule bmask_T1T2:
     input:
         t1="../../data/{study}/Protocols/BiasCorrected/{mrid}/{mrid}_T1_LPS_N4.nii.gz",
         t2="../../data/{study}/Protocols/BiasCorrected/{mrid}/{mrid}_T2_LPS_N4.nii.gz",
-        bmask="../../data/{study}/Protocols/Skull-Stripped_4D/{mrid}/{mrid}_T1_LPS_N4_brain_muse-ss_Mean.nii.gz"
+        #bmask="../../data/{study}/Protocols/Skull-Stripped_4D/{mrid}/{mrid}_T1_LPS_N4_brain_muse-ss_Mean.nii.gz",
+        rank="../../data/{study}/Protocols/Skull-Stripped_4D/{mrid}/{mrid}_T1_LPS_N4_ROI_1_SimRank_Mean.nii.gz",
     output:
         "../../data/{study}/Protocols/Skull-Stripped_T2/{mrid}/{mrid}_T1_LPS_N4_brainmask_muse-ss_Mean_ICV.nii.gz"
+    params:
+        T2ICViter='100',
+        T2ICVminsd='-1',
+        T2ICVmaxsd='100',
+        T2ICVtol='0.00001',
     resources:
         mem_mb=8000,
     shell:
-        "bash ./utils/util_bmask_T1T2.sh {input} {output}"
+        "echo python GenerateICVmask.py -i {input.t1} -r {input.t2} -j {input.rank} -o {output.fout} -n {params.T2ICViter} -l {params.T2ICVminsd} -h {params.T2ICVmaxsd} -t {params.T2ICVtol}; "
+        "python GenerateICVmask.py -i {input.t1} -r {input.t2} -j {input.rank} -o {output.fout} -n {params.T2ICViter} -l {params.T2ICVminsd} -h {params.T2ICVmaxsd} -t {params.T2ICVtol}; "
 
 rule biascorr_FAST:
     """
@@ -101,35 +81,16 @@ rule biascorr_FAST:
     shell:
         "bash ./utils/util_biascorr_FAST.sh {input} {output}"
         
-rule MUSE_BL:
+rule MUSE:
     """
-    Run MUSE; applied only to BL images
+    Run MUSE
     """
     input:
         "../../data/{study}/Protocols/fastbc/{mrid}/{mrid}_T1_LPS_N4_brain_muse-ss_Mean_fastbc.nii.gz"
     output:
-        "../../data/{study}/Protocols/MUSE_BL/{mrid}/{mrid}_{mod}_LPS_N4_brain_muse-ss_Mean_fastbc_muse.nii.gz"
+        "../../data/{study}/Protocols/MUSE/{mrid}/{mrid}_{mod}_LPS_N4_brain_muse-ss_Mean_fastbc_muse.nii.gz"
     resources:
-        mem_mb=8000,
+        mem_mb=32000,
     shell:
         "bash ./utils/util_MUSE.sh {input} {output}"
 
-rule MUSE_4D:
-    """
-    Run MUSE using BL warps 
-    - Applied to all images both BL and FU
-    - For BL images an image is warped to itself to calculate the 4D ROIs; this looks redundant    
-    """
-    input:
-        img="../../data/{study}/Protocols/fastbc/{mrid}/{mrid}_T1_LPS_N4_brain_muse-ss_Mean_fastbc.nii.gz",
-        blimg = lambda wildcards: "../../data/{study}/Protocols/fastbc/" + DICT_BLID[wildcards.mrid] + "/" + DICT_BLID[wildcards.mrid] + "_T1_LPS_N4_brain_muse-ss_Mean_fastbc.nii.gz",
-        blseg = lambda wildcards: "../../data/{study}/Protocols/MUSE_BL/" + DICT_BLID[wildcards.mrid] + "/" + DICT_BLID[wildcards.mrid] + "_T1_LPS_N4_brain_muse-ss_Mean_fastbc_muse.nii.gz"
-    params:
-        BLID=lambda wildcards:DICT_BLID[wildcards.mrid]
-    output:
-        "../../data/{study}/Protocols/MUSE_4D/{mrid}/{mrid}_T1_LPS_N4_brain_muse-ss_Mean_fastbc_muse.nii.gz"
-    resources:
-        mem_mb=8000
-    shell:
-        "bash ./utils/util_MUSE_4D.sh {input} {output} {wildcards.mrid} {params.BLID}"
-        
