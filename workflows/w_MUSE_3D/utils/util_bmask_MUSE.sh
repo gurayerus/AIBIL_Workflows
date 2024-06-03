@@ -9,9 +9,9 @@ dout=`dirname ${fout}`
 fnameout=`basename ${fout} | sed 's/.nii.gz//g'`
 
 ## Set params
-MuseSSTempLoc='/cbica/software/muse-3.1.0/data/Templates/BrainExtraction'
+MuseSSTempLoc='/opt/cbica/software/muse-3.1.0/data/Templates/BrainExtraction'
 MuseSSTempNum='50'
-MuseSSrois='/cbica/software/muse-3.1.0/data/List/MUSE-SS_ROIs.csv'
+MuseSSrois='/opt/cbica/software/muse-3.1.0/data/List/MUSE-SS_ROIs.csv'
 MuseSSMethod='3'
 MuseSSDRAMMSReg='0.1'
 MuseSSANTSReg='0.5'
