@@ -61,7 +61,8 @@ from pythonUtilities import *
 os.environ['FSLOUTPUTTYPE'] = 'NIFTI_GZ'
 
 ### Default parameters
-numiter     = int(50)
+## numiter     = int(50)  FIXME tmp set to 5 for fast run
+numiter     = int(5)
 minsd       = float(-0.5)
 maxsd       = float(3)
 tolerance   = float(0.01)
@@ -208,11 +209,11 @@ if affine == int(0):
 ### Threshold the input image at threshold mask and segment it
 print("----->	Thresholding the input T1 and T2 images at the 50% agreement mask and segmenting them ...")
 
-T1_dat_thresh 		= sp.where( JR_dat > 0.5, T1_dat, 0 )
-T1_dat_thresh_res 	= sp.ndimage.zoom( T1_dat_thresh, 0.5, order=1 )
+T1_dat_thresh 		= np.where( JR_dat > 0.5, T1_dat, 0 )
+T1_dat_thresh_res 	= ndimage.zoom( T1_dat_thresh, 0.5, order=1 )
 
-T2_dat_thresh 		= sp.where( JR_dat > 0.5, T2_dat, 0 )
-T2_dat_thresh_res 	= sp.ndimage.zoom( T2_dat_thresh, 0.5, order=1 )
+T2_dat_thresh 		= np.where( JR_dat > 0.5, T2_dat, 0 )
+T2_dat_thresh_res 	= ndimage.zoom( T2_dat_thresh, 0.5, order=1 )
 
 T1_dat_thresh_resimg = nib.Nifti1Image( T1_dat_thresh_res, None, T1_hdr )
 T1_dat_thresh_resimg.to_filename( os.path.join( TMP + '/' + T1inputbName + '_thresh_res.nii.gz' ) )
@@ -326,19 +327,19 @@ prob_map[ :,:,:,4 ] = ( prob_map[ :,:,:,3 ]/prob_map[ :,:,:,3 ].max()*2 + 4*prob
 ### Smooth all probabilities
 print("----->	Smoothing all probabilities ...")
 for i in range(5):
-	prob_map[ :,:,:,i ] = sp.ndimage.gaussian_filter( prob_map[ :,:,:,i ], 1 / np.sqrt(8*np.log(2)) )
+	prob_map[ :,:,:,i ] = ndimage.gaussian_filter( prob_map[ :,:,:,i ], 1 / np.sqrt(8*np.log(2)) )
 
 ### Get the initial brain mask from the input jacobian rank map
 print("----->	Generating the initial brain mask from the input Jacobian Rank Mask ...")
 
 # Getting the initial brain mask
-#data_maskimg 		= sp.where( prob_map[ :,:,:,3 ] > 1.1, 1, 0 )
-data_maskimg 		= sp.where( prob_map[ :,:,:,3 ] > 1.25, 1, 0 )
-data_maskimg_updated 	= sp.ndimage.binary_opening( data_maskimg, iterations=4 ).astype(np.int)
+#data_maskimg 		= np.where( prob_map[ :,:,:,3 ] > 1.1, 1, 0 )
+data_maskimg 		= np.where( prob_map[ :,:,:,3 ] > 1.25, 1, 0 )
+data_maskimg_updated 	= ndimage.binary_opening( data_maskimg, iterations=4 ).astype(int)
 
 # Removing small clusters smaller than 100 voxels in size
-label_im, nb_labels 	= sp.ndimage.label( data_maskimg_updated )
-sizes 			= sp.ndimage.sum( data_maskimg_updated, label_im, list(range(nb_labels + 1)))
+label_im, nb_labels 	= ndimage.label( data_maskimg_updated )
+sizes 			= ndimage.sum( data_maskimg_updated, label_im, list(range(nb_labels + 1)))
 vol			= data_maskimg_updated.sum() / 2
 mask_size 		= sizes < vol
 remove_pixel 		= mask_size[label_im]
@@ -373,24 +374,24 @@ for tissue in 3, 4:
 
 		# Binarizing the z-score mask between intervals [minsd, maxsd] and dilating it
 		data_maskimg_updated 		= data_maskimg_prev + \
-						(sp.ndimage.morphology.binary_dilation(data_maskimg_prev) - data_maskimg_prev) * \
-						sp.where( (prob_zscore > minsd) & (prob_zscore < maxsd), 1, 0)
+						(ndimage.morphology.binary_dilation(data_maskimg_prev) - data_maskimg_prev) * \
+						np.where( (prob_zscore > minsd) & (prob_zscore < maxsd), 1, 0)
 
 		# Binary opening
-		data_maskimg_updated 		= sp.ndimage.binary_opening( data_maskimg_updated ).astype(np.int)
+		data_maskimg_updated 		= ndimage.binary_opening( data_maskimg_updated ).astype(int)
 
 		# Removing small clusters smaller than 10 voxels in size
-		label_im, nb_labels 		= sp.ndimage.label(data_maskimg_updated)
-		sizes 				= sp.ndimage.sum(data_maskimg_updated, label_im, list(range(nb_labels + 1)))
+		label_im, nb_labels 		= ndimage.label(data_maskimg_updated)
+		sizes 				= ndimage.sum(data_maskimg_updated, label_im, list(range(nb_labels + 1)))
 		mask_size 			= sizes < 100
 		remove_pixel 			= mask_size[label_im]
 		data_maskimg_updated[remove_pixel] = 0
 
 		# Binary closing
-		data_maskimg_updated 		= sp.ndimage.binary_closing( data_maskimg_updated ).astype(np.int)
+		data_maskimg_updated 		= ndimage.binary_closing( data_maskimg_updated ).astype(int)
 
 		# Gaussian smoothing
-		data_maskimg_updated 		= sp.where( sp.ndimage.gaussian_filter( data_maskimg_updated*1000, 2 / np.sqrt(8*np.log(2)) ) > 500, 1, 0)
+		data_maskimg_updated 		= np.where( ndimage.gaussian_filter( data_maskimg_updated*1000, 2 / np.sqrt(8*np.log(2)) ) > 500, 1, 0)
 
 		# Calculating stats again
 		prevCount 			= float(data_maskimg_prev.sum())
@@ -404,7 +405,7 @@ for tissue in 3, 4:
 		i = i + 1
 
 # Gaussian smoothing
-data_maskimg_updated = sp.where( sp.ndimage.gaussian_filter( data_maskimg_updated*1000, 2 / np.sqrt(8*np.log(2)) ) > 500, 1, 0)
+data_maskimg_updated = np.where( ndimage.gaussian_filter( data_maskimg_updated*1000, 2 / np.sqrt(8*np.log(2)) ) > 500, 1, 0)
 
 
 # Save output files
@@ -417,7 +418,7 @@ if probJR:
 
 if stripped:
 	T1inputdName, T1inputbName, T1inputExt
-	data_inputimg_thresh = sp.where( data_maskimg_updated > 0, T1_dat, 0 )
+	data_inputimg_thresh = np.where( data_maskimg_updated > 0, T1_dat, 0 )
 	
 	data_inputimg_thresh = nib.Nifti1Image( data_inputimg_thresh, None, T1_hdr )
 	data_inputimg_thresh.to_filename(os.path.join( strippeddName + '/' + strippedbName + strippedExt ))
