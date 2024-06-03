@@ -1,0 +1,121 @@
+
+configfile: "../../config/config.yaml"
+
+localrules: select_sample_spare, merge_rois, copy_model, split_train_test
+
+## Read lists
+import pandas as pd
+
+df = pd.read_csv(config["list_studies"])
+LIST_STUDIES = df.Study.tolist()
+
+df = pd.read_csv(config["list_rois_primary"])
+LIST_ROIS = df.Index.tolist()
+
+###################################
+## Function definitions
+
+###################################
+## Rules
+rule ALL:
+    input:expand("../../data/SmileGAN/s{stype}/r{rtype}/pred/NiChart_DLMUSE_harmonized_normICV_r{rtype}_hISTAG_eval.csv", stype = LIST_SmileGAN, rtype = ['singleROI'])
+    
+    
+#################################    
+## Prep data
+
+rule merge_demog_and_data:
+    '''
+    Merge demog and data
+    '''
+    input:
+        demog="../../data/data_consolidated/NiChart_demog.csv",
+        data="../../data/data_consolidated/NiChart_DLMUSE_{dtype}.csv",
+    params:
+        key_var="MRID"
+    output:
+        "../../data/SmileGAN/prep/NiChart_DLMUSE+Demog_{dtype}.csv",
+    resources:
+        mem_mb=8000
+    shell:
+        "echo python utils/util_merge_two.py {input} {params} {output};"
+        "python utils/util_merge_two.py {input} {params} {output}"
+
+rule select_sample:
+    '''
+    Select spare sample
+    - Select samples (from the centiles sample list)
+    - Select variables (a set of input variables + ROI names from list)
+    '''
+    input:
+        sample="../../data/samples/sample_SmileGAN_{stype}_all.csv",
+        data="../../data/SmileGAN/prep/NiChart_DLMUSE+Demog_{dtype}.csv",
+        rois="../../config/list_MUSE_{rtype}.csv",
+    params:
+        vars='MRID,Age,Sex',
+    output:
+        "../../data/SmileGAN/s{stype}/r{rtype}/data/NiChart_DLMUSE_{dtype}_all.csv"
+    resources:
+        mem_mb=8000
+    shell:
+        "echo python utils/util_select_sample.py {input} {params} {output}; "
+        "python utils/util_select_sample.py {input} {params} {output}"
+
+rule SmileGAN_train:
+    '''
+    Train SmileGAN model
+    '''
+    input:
+        "../../data/SmileGAN/s{stype}/r{rtype}/data/NiChart_DLMUSE_{dtype}_train.csv"
+    params:
+        vkey='MRID',
+    output:
+        "../../data/SmileGAN/s{stype}/r{rtype}/models/NiChart_DLMUSE_{dtype}_model.pkl.gz"
+    resources:
+        mem_mb=16000
+    shell:
+        "echo spare_score -a train -i {input} -o {output} -kv {params.vkey} -t {wildcards.stype} "
+        "-mt SVM -k linear -pg 1; "
+        "spare_score -a train -i {input} -o {output} -kv {params.vkey} -t {wildcards.stype} "
+        "-mt SVM -k linear -pg 1"
+        
+rule SmileGAN_test:
+    '''
+    Test SmileGAN model using the split test sample
+    '''
+    input:
+        data="../../data/SmileGAN/s{stype}/r{rtype}/data/NiChart_DLMUSE_{dtype}_test.csv",
+        mdl="../../data/SmileGAN/s{stype}/r{rtype}/models/NiChart_DLMUSE_{dtype}_model.pkl.gz"
+    output:
+        csv="../../data/SmileGAN/s{stype}/r{rtype}/pred/NiChart_DLMUSE_{dtype}_pred.csv"
+    resources:
+        mem_mb=16000
+    shell:
+        "echo spare_score -a test -i {input.data} -m {input.mdl} -o {output.csv}; "
+        "spare_score -a test -i {input.data} -m {input.mdl} -o {output.csv}"
+
+rule SmileGAN_eval:
+    '''
+    Evaluate accuracy on test sample
+    '''
+    input:
+        data="../../data/SmileGAN/s{stype}/r{rtype}/data/NiChart_DLMUSE_{dtype}_test.csv",
+        pred="../../data/SmileGAN/s{stype}/r{rtype}/pred/NiChart_DLMUSE_{dtype}_pred.csv"
+    output:
+        csv="../../data/SmileGAN/s{stype}/r{rtype}/pred/NiChart_DLMUSE_{dtype}_eval.csv"
+    resources:
+        mem_mb=8000
+    shell:
+        "echo python utils/util_eval_spare.py {input} {wildcards.stype} {output}; "
+        "python utils/util_eval_spare.py {input} {wildcards.stype} {output}"
+
+#rule copy_model:
+    #'''
+    #Copy model to models folder
+    #'''
+    #input:
+        #"../../data/SmileGAN/s_{stype}/models/NiChart_DLMUSE_{dtype}_model.pkl.gz"
+    #output:
+        #"../../models/SmileGAN/SmileGAN_{stype}_NiChart_DLMUSE_{dtype}_model.pkl.gz"
+    #shell:
+        #"cp {input} {output}"

@@ -4,7 +4,9 @@ localrules: reorientLPS
 rule ALL:
     #input:expand("../../data/{study}/Protocols/MUSE_4D/{mrid}/{mrid}_T1_LPS_N4_brain_muse-ss_Mean_fastbc_muse.nii.gz", study = ['MUSETest'], mrid = ['OAS30001_MR_d0129'])
     #input:expand("../../data/{study}/Protocols/Skull-Stripped/{mrid}/{mrid}_T1_LPS_N4_brainmask_muse-ss.nii.gz", study = ['MUSETest'], mrid = ['OAS30001_MR_d0129'])
-    input:expand("../../data/{study}/Protocols/Skull-Stripped/{mrid}/{mrid}_T1_LPS_N4_brainmask_muse-ss_Mean_ICV.nii.gz", study = ['MUSETest'], mrid = ['OAS30001_MR_d0129'])
+    #input:expand("../../data/{study}/Protocols/Skull-Stripped/{mrid}/{mrid}_T1_LPS_N4_brainmask_muse-ss_ICV.nii.gz", study = ['MUSETest'], mrid = ['OAS30001_MR_d0129'])
+    #input:expand("../../data/{study}/Protocols/fastbc/{mrid}/{mrid}_T1_LPS_N4_brain_muse-ss_fastbc.nii.gz", study = ['MUSETest'], mrid = ['OAS30001_MR_d0129'])
+    input:expand("../../data/{study}/Protocols/MUSE/{mrid}/{mrid}_T1_LPS_N4_brain_muse-ss_fastbc_muse.nii.gz", study = ['MUSETest'], mrid = ['OAS30001_MR_d0129'])
 
 rule reorientLPS:
     """
@@ -47,17 +49,31 @@ rule bmask_MUSE:
     shell:
         "bash ./utils/util_bmask_MUSE_singularity_wrapper.sh {input} {output}"
 
-rule bmask_T1T2:
+rule apply_bmask:
+    """
+    Apply mask to T1 image
+    """
+    input:
+        fin="../../data/{study}/Protocols/BiasCorrected/{mrid}/{mrid}_T1_LPS_N4.nii.gz",
+        fmask="../../data/{study}/Protocols/Skull-Stripped/{mrid}/{mrid}_T1_LPS_N4_brainmask_muse-ss.nii.gz",
+    output:
+        "../../data/{study}/Protocols/Skull-Stripped/{mrid}/{mrid}_T1_LPS_N4_brain_muse-ss.nii.gz",
+    resources:
+        mem_mb=8000
+    shell:
+        "echo bash ./utils/util_apply_bmask.sh {input} {output}; "
+        "bash ./utils/util_apply_bmask.sh {input} {output}"
+
+rule icvmask_T1T2:
     """
     T2 based skull stripping
     """
     input:
         t1="../../data/{study}/Protocols/BiasCorrected/{mrid}/{mrid}_T1_LPS_N4.nii.gz",
         t2="../../data/{study}/Protocols/BiasCorrected/{mrid}/{mrid}_T2_LPS_N4.nii.gz",
-        #bmask="../../data/{study}/Protocols/Skull-Stripped_4D/{mrid}/{mrid}_T1_LPS_N4_brain_muse-ss_Mean.nii.gz",
         rank="../../data/{study}/Protocols/Skull-Stripped/{mrid}/{mrid}_T1_LPS_N4_ROI_1_SimRank.nii.gz",
     output:
-        fout="../../data/{study}/Protocols/Skull-Stripped/{mrid}/{mrid}_T1_LPS_N4_brainmask_muse-ss_Mean_ICV.nii.gz"
+        fout="../../data/{study}/Protocols/Skull-Stripped/{mrid}/{mrid}_T1_LPS_N4_brainmask_muse-ss_ICV.nii.gz"
     params:
         T2ICViter='100',
         T2ICVminsd='-1',
@@ -74,9 +90,9 @@ rule biascorr_FAST:
     FAST bias correction
     """
     input:
-        "../../data/{study}/Protocols/Skull-Stripped_4D/{mrid}/{mrid}_T1_LPS_N4_brain_muse-ss_Mean.nii.gz"
+        "../../data/{study}/Protocols/Skull-Stripped/{mrid}/{mrid}_T1_LPS_N4_brain_muse-ss.nii.gz"
     output:
-        "../../data/{study}/Protocols/fastbc/{mrid}/{mrid}_T1_LPS_N4_brain_muse-ss_Mean_fastbc.nii.gz"
+        "../../data/{study}/Protocols/fastbc/{mrid}/{mrid}_T1_LPS_N4_brain_muse-ss_fastbc.nii.gz"
     resources:
         mem_mb=8000,
     shell:
@@ -87,11 +103,12 @@ rule MUSE:
     Run MUSE
     """
     input:
-        "../../data/{study}/Protocols/fastbc/{mrid}/{mrid}_T1_LPS_N4_brain_muse-ss_Mean_fastbc.nii.gz"
+        fin="../../data/{study}/Protocols/fastbc/{mrid}/{mrid}_T1_LPS_N4_brain_muse-ss_fastbc.nii.gz",
+        cont="../../resources/Container/CBICApipeline_centos7.sif"
     output:
-        "../../data/{study}/Protocols/MUSE/{mrid}/{mrid}_{mod}_LPS_N4_brain_muse-ss_Mean_fastbc_muse.nii.gz"
+        "../../data/{study}/Protocols/MUSE/{mrid}/{mrid}_T1_LPS_N4_brain_muse-ss_fastbc_muse.nii.gz"
     resources:
-        mem_mb=32000,
+        mem_mb=48000,
     shell:
-        "bash ./utils/util_MUSE.sh {input} {output}"
-
+        "echo bash ./utils/util_MUSE_singularity_wrapper.sh {input} {output}; "
+        "bash ./utils/util_MUSE_singularity_wrapper.sh {input} {output}"
