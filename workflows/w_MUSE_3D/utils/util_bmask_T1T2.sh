@@ -4,14 +4,13 @@
 
 t1=$(realpath $1)
 t2=$(realpath $2)
-bmask=$(realpath $3)
-fout=$(realpath $4)
+rank=$(realpath $3)
+T2ICViter=$4
+T2ICVminsd=$5
+T2ICVmaxsd=$6
+T2ICVtol=$7
+fout=$(realpath $8)
 
-rank=${bmask%_brain_muse-ss_Mean.nii.gz}_ROI_1_SimRank_Mean.nii.gz
+echo python ./utils/GenerateICVmask.py -i ${t1} -r ${t2} -j ${rank} -o ${fout} -n $T2ICViter -l $T2ICVminsd -h $T2ICVmaxsd -t $T2ICVtol 
 
-T2ICViter=100
-T2ICVminsd=-1
-T2ICVmaxsd=100
-T2ICVtol=0.00001
-
-GenerateICVmask.py -i ${t1} -r ${t2} -j ${rank} -o ${fout} -n $T2ICViter -l $T2ICVminsd -h $T2ICVmaxsd -t $T2ICVtol 
+python ./utils/GenerateICVmask.py -i ${t1} -r ${t2} -j ${rank} -o ${fout} -n $T2ICViter -l $T2ICVminsd -h $T2ICVmaxsd -t $T2ICVtol -v 1

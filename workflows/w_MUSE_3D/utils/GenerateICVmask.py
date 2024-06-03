@@ -146,18 +146,18 @@ print("----->	Reading the input images ...")
 T1_img 	= nib.load( os.path.join( T1 ) )
 JR_img 	= nib.load( os.path.join( JR ) )
 
-T1_dat 	= T1_img.get_data()
-T1_hdr 	= T1_img.get_header()
+T1_dat 	= T1_img.get_fdata()
+T1_hdr 	= T1_img.header
 
-JR_dat 	= JR_img.get_data()
-JR_hdr 	= JR_img.get_header()
+JR_dat 	= JR_img.get_fdata()
+JR_hdr 	= JR_img.header
 
 JR_dat 	= JR_dat / JR_dat.max() 	# scaling the jacrank to [0,1]
 
 if affine == int(1):
 	T2_img 	= nib.load( os.path.join( T2 ) )
-	T2_dat 	= T2_img.get_data()
-	T2_hdr 	= T2_img.get_header()
+	T2_dat 	= T2_img.get_fdata()
+	T2_hdr 	= T2_img.header
 
 ### Create temporary directory
 TMP = createTempDir('SkullStrip_IC-', tmpDirToUse)
@@ -196,8 +196,8 @@ if affine == int(0):
 
 		# Read co-registered T2 images and average them
 		T2_img 	= nib.load( TMP + '/' + T2inputbName + '_rT1_' + cost + '.nii.gz' )
-		T2_dat	= T2_dat + T2_img.get_data()
-		T2_hdr	= T2_img.get_header()
+		T2_dat	= T2_dat + T2_img.get_fdata()
+		T2_hdr	= T2_img.header
 
 		# Remove temporary files
 		os.remove( TMP + '/' + T2inputbName + '_rT1_' + cost + '.nii.gz' )
@@ -269,8 +269,8 @@ except:
 	sys.exit(0)
 
 # Read segmented image and then delete the temporary directory
-T1segimg = nib.load( TMP + '/' + T1inputbName + '_thresh_res_fast_seg.nii.gz' ).get_data()
-T2segimg = nib.load( TMP + '/' + T2inputbName + '_thresh_res_fast_seg.nii.gz' ).get_data()
+T1segimg = nib.load( TMP + '/' + T1inputbName + '_thresh_res_fast_seg.nii.gz' ).get_fdata()
+T2segimg = nib.load( TMP + '/' + T2inputbName + '_thresh_res_fast_seg.nii.gz' ).get_fdata()
 
 os.remove( TMP + '/' + T1inputbName + '_thresh_res.nii.gz' )
 os.remove( TMP + '/' + T1inputbName + '_thresh_res_fast_seg.nii.gz' )
