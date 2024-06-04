@@ -11,8 +11,10 @@ LIST_HMUSE_NAMES = df.Name.tolist()
 ###################################
 ## Rules
 rule ALL:
-    #input:"../../data/ISTAG_Data/SmileGAN/ISTAG_HMUSE_trainADNI2_BL.csv"
-    input:"../../data/ISTAG_Data/SmileGAN/ISTAG_HMUSE_testADNI_all.csv"
+    #input:"../../data/SmileGAN/prep/SmileGAN_testADNI_all.csv"
+    #input:"../../data/SmileGAN/prep/SmileGAN_trainADNI2_BL.csv"
+    #input:"../../data/SmileGAN/data/SmileGAN_testADNI_all_demog.csv"
+    input:"../../data/SmileGAN/data/SmileGAN_trainADNI2_BL_demog.csv"
     
 #################################    
 ## Prep data
@@ -26,11 +28,11 @@ rule select_sample:
     input:
         sample="../../data/samples/sample_SmileGAN_{stype}.csv",
         data="../../data/ISTAG_Data/InitConsolidated/istaging_MRIDOnly.csv",
-        rois="../../config/list_MUSE_ISTAGHarmonized.csv",
+        rois="../../config/list_MUSE_ISTAGHarmonizedSingle.csv",
     params:
         vars='MRID,Age,Sex,DX_Binary',
     output:
-        temp("../../data/SmileGAN/prep/SmileGAN_{stype}.csv")
+        "../../data/SmileGAN/prep/SmileGAN_{stype}.csv"
     resources:
         mem_mb=8000
     shell:
@@ -44,8 +46,8 @@ rule prep_smilegan_input:
     input:
         "../../data/SmileGAN/prep/SmileGAN_{stype}.csv",
     output:
-        roi="../../data/SmileGAN/data/SmileGAN_{stype}_rois.csv",
         demog="../../data/SmileGAN/data/SmileGAN_{stype}_demog.csv",
+        roi="../../data/SmileGAN/data/SmileGAN_{stype}_rois.csv",
     resources:
         mem_mb=8000
     shell:
@@ -55,14 +57,12 @@ rule prep_smilegan_input:
 #################################    
 ## Run training
 
-rule SmileGAN_train:
+rule smilegan_train:
     '''
     Train SmileGAN model
     '''
     input:
         "../../data/SmileGAN/s{stype}/r{rtype}/data/NiChart_DLMUSE_{dtype}_train.csv"
-    params:
-        vkey='MRID',
     output:
         "../../data/SmileGAN/s{stype}/r{rtype}/models/NiChart_DLMUSE_{dtype}_model.pkl.gz"
     resources:
