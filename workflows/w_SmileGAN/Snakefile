@@ -68,8 +68,8 @@ rule smilegan_train_folds:
     output:
         "../../data/SmileGAN/model/SmileGAN_{stype}/converged_model_fold{fold}"
     params:
-        ncluster = '4'
-        fold={wildcards.fold}
+        ncluster = '4',
+        fold="{fold}",
         numfold='20'
     resources:
         mem_mb=16000
