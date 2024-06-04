@@ -28,7 +28,7 @@ rule select_sample:
         data="../../data/ISTAG_Data/InitConsolidated/istaging_MRIDOnly.csv",
         rois="../../config/list_MUSE_ISTAGHarmonized.csv",
     params:
-        vars='MRID,Age,Sex,Diagnosis,DX_Binary',
+        vars='MRID,Age,Sex,DX_Binary',
     output:
         temp("../../data/SmileGAN/prep/SmileGAN_{stype}.csv")
     resources:
