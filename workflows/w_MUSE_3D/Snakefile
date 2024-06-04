@@ -8,82 +8,82 @@ rule ALL:
     #input:expand("../../data/{study}/Protocols/fastbc/{mrid}/{mrid}_T1_LPS_N4_brain_muse-ss_fastbc.nii.gz", study = ['MUSETest'], mrid = ['OAS30001_MR_d0129'])
     input:expand("../../data/{study}/Protocols/MUSE/{mrid}/{mrid}_T1_LPS_N4_brain_muse-ss_fastbc_muse.nii.gz", study = ['MUSETest'], mrid = ['OAS30001_MR_d0129'])
 
-rule reorientLPS:
-    """
-    Reorient a 3D image to LPS orientation
-    """
-    input:
-        "../../data/{study}/Data/RenamedNifti/{mrid}/{mrid}_{mod}.nii.gz"
-    output:
-        "../../data/{study}/Protocols/ReOrientedLPS/{mrid}/{mrid}_{mod}_LPS.nii.gz"
-    resources:
-        mem_mb=8000,
-    shell:
-        "bash ./utils/util_reorientLPS.sh {input} {output}"
+#rule reorientLPS:
+    #"""
+    #Reorient a 3D image to LPS orientation
+    #"""
+    #input:
+        #"../../data/{study}/Data/RenamedNifti/{mrid}/{mrid}_{mod}.nii.gz"
+    #output:
+        #"../../data/{study}/Protocols/ReOrientedLPS/{mrid}/{mrid}_{mod}_LPS.nii.gz"
+    #resources:
+        #mem_mb=8000,
+    #shell:
+        #"bash ./utils/util_reorientLPS.sh {input} {output}"
 
-rule biascorr_N4:
-    """
-    N4 bias correction
-    """
-    input:
-        "../../data/{study}/Protocols/ReOrientedLPS/{mrid}/{mrid}_{mod}_LPS.nii.gz"
-    output:
-        "../../data/{study}/Protocols/BiasCorrected/{mrid}/{mrid}_{mod}_LPS_N4.nii.gz"
-    resources:
-        mem_mb=8000,
-    shell:
-        "bash ./utils/util_biascorr_N4.sh {input} {output}"
+#rule biascorr_N4:
+    #"""
+    #N4 bias correction
+    #"""
+    #input:
+        #"../../data/{study}/Protocols/ReOrientedLPS/{mrid}/{mrid}_{mod}_LPS.nii.gz"
+    #output:
+        #"../../data/{study}/Protocols/BiasCorrected/{mrid}/{mrid}_{mod}_LPS_N4.nii.gz"
+    #resources:
+        #mem_mb=8000,
+    #shell:
+        #"bash ./utils/util_biascorr_N4.sh {input} {output}"
 
-rule bmask_MUSE:
-    """
-    MUSE skull stripping
-    - Applied to all images, both BL and FU
-    """
-    input:
-        fin="../../data/{study}/Protocols/BiasCorrected/{mrid}/{mrid}_T1_LPS_N4.nii.gz",
-        cont="../../resources/Container/CBICApipeline_centos7.sif"
-    output:
-        "../../data/{study}/Protocols/Skull-Stripped/{mrid}/{mrid}_T1_LPS_N4_brainmask_muse-ss.nii.gz",
-    resources:
-        mem_mb=32000
-    shell:
-        "bash ./utils/util_bmask_MUSE_singularity_wrapper.sh {input} {output}"
+#rule bmask_MUSE:
+    #"""
+    #MUSE skull stripping
+    #- Applied to all images, both BL and FU
+    #"""
+    #input:
+        #fin="../../data/{study}/Protocols/BiasCorrected/{mrid}/{mrid}_T1_LPS_N4.nii.gz",
+        #cont="../../resources/Container/CBICApipeline_centos7.sif"
+    #output:
+        #"../../data/{study}/Protocols/Skull-Stripped/{mrid}/{mrid}_T1_LPS_N4_brainmask_muse-ss.nii.gz",
+    #resources:
+        #mem_mb=32000
+    #shell:
+        #"bash ./utils/util_bmask_MUSE_singularity_wrapper.sh {input} {output}"
 
-rule apply_bmask:
-    """
-    Apply mask to T1 image
-    """
-    input:
-        fin="../../data/{study}/Protocols/BiasCorrected/{mrid}/{mrid}_T1_LPS_N4.nii.gz",
-        fmask="../../data/{study}/Protocols/Skull-Stripped/{mrid}/{mrid}_T1_LPS_N4_brainmask_muse-ss.nii.gz",
-    output:
-        "../../data/{study}/Protocols/Skull-Stripped/{mrid}/{mrid}_T1_LPS_N4_brain_muse-ss.nii.gz",
-    resources:
-        mem_mb=8000
-    shell:
-        "echo bash ./utils/util_apply_bmask.sh {input} {output}; "
-        "bash ./utils/util_apply_bmask.sh {input} {output}"
+#rule apply_bmask:
+    #"""
+    #Apply mask to T1 image
+    #"""
+    #input:
+        #fin="../../data/{study}/Protocols/BiasCorrected/{mrid}/{mrid}_T1_LPS_N4.nii.gz",
+        #fmask="../../data/{study}/Protocols/Skull-Stripped/{mrid}/{mrid}_T1_LPS_N4_brainmask_muse-ss.nii.gz",
+    #output:
+        #"../../data/{study}/Protocols/Skull-Stripped/{mrid}/{mrid}_T1_LPS_N4_brain_muse-ss.nii.gz",
+    #resources:
+        #mem_mb=8000
+    #shell:
+        #"echo bash ./utils/util_apply_bmask.sh {input} {output}; "
+        #"bash ./utils/util_apply_bmask.sh {input} {output}"
 
-rule icvmask_T1T2:
-    """
-    T2 based skull stripping
-    """
-    input:
-        t1="../../data/{study}/Protocols/BiasCorrected/{mrid}/{mrid}_T1_LPS_N4.nii.gz",
-        t2="../../data/{study}/Protocols/BiasCorrected/{mrid}/{mrid}_T2_LPS_N4.nii.gz",
-        rank="../../data/{study}/Protocols/Skull-Stripped/{mrid}/{mrid}_T1_LPS_N4_ROI_1_SimRank.nii.gz",
-    output:
-        fout="../../data/{study}/Protocols/Skull-Stripped/{mrid}/{mrid}_T1_LPS_N4_brainmask_muse-ss_ICV.nii.gz"
-    params:
-        T2ICViter='100',
-        T2ICVminsd='-1',
-        T2ICVmaxsd='100',
-        T2ICVtol='0.00001',
-    resources:
-        mem_mb=8000,
-    shell:
-        "echo bash ./utils/util_bmask_T1T2.sh {input} {params} {output}; "
-        "bash ./utils/util_bmask_T1T2.sh {input} {params} {output}"
+#rule icvmask_T1T2:
+    #"""
+    #T2 based skull stripping
+    #"""
+    #input:
+        #t1="../../data/{study}/Protocols/BiasCorrected/{mrid}/{mrid}_T1_LPS_N4.nii.gz",
+        #t2="../../data/{study}/Protocols/BiasCorrected/{mrid}/{mrid}_T2_LPS_N4.nii.gz",
+        #rank="../../data/{study}/Protocols/Skull-Stripped/{mrid}/{mrid}_T1_LPS_N4_ROI_1_SimRank.nii.gz",
+    #output:
+        #fout="../../data/{study}/Protocols/Skull-Stripped/{mrid}/{mrid}_T1_LPS_N4_brainmask_muse-ss_ICV.nii.gz"
+    #params:
+        #T2ICViter='100',
+        #T2ICVminsd='-1',
+        #T2ICVmaxsd='100',
+        #T2ICVtol='0.00001',
+    #resources:
+        #mem_mb=8000,
+    #shell:
+        #"echo bash ./utils/util_bmask_T1T2.sh {input} {params} {output}; "
+        #"bash ./utils/util_bmask_T1T2.sh {input} {params} {output}"
 
 rule biascorr_FAST:
     """

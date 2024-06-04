@@ -19,8 +19,8 @@ FASTfwhm=20
 
 ## FIXME simple args here to run fast
 FASTiter=1
-fast -n 3 -I $FASTiter -l $FASTfwhm -B -o ${dtmp}/fastseg -v ${fin}
+fast -n 3 -I $FASTiter -l $FASTfwhm -B -o ${dtmp}/fastseg.nii.gz -v ${fin}
 
-cp ${dtmp}/fastseg_seg.nii.gz $fout
+cp ${dtmp}/fastseg_restore.nii.gz $fout
 
 rm -rf ${dtmp}
