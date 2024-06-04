@@ -13,8 +13,8 @@ LIST_HMUSE_NAMES = df.Name.tolist()
 rule ALL:
     #input:"../../data/SmileGAN/prep/SmileGAN_testADNI_all.csv"
     #input:"../../data/SmileGAN/prep/SmileGAN_trainADNI2_BL.csv"
-    #input:"../../data/SmileGAN/data/SmileGAN_testADNI_all_demog.csv"
-    input:"../../data/SmileGAN/data/SmileGAN_trainADNI2_BL_demog.csv"
+    input:"../../data/SmileGAN/data/SmileGAN_testADNI_all_demog.csv"
+    #input:"../../data/SmileGAN/data/SmileGAN_trainADNI2_BL_demog.csv"
     
 #################################    
 ## Prep data
