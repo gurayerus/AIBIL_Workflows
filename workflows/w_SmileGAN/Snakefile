@@ -1,16 +1,9 @@
-
 configfile: "../../config/config.yaml"
-
-localrules: select_sample_spare, merge_rois, copy_model, split_train_test
 
 ## Read lists
 import pandas as pd
-
-df = pd.read_csv(config["list_studies"])
-LIST_STUDIES = df.Study.tolist()
-
-df = pd.read_csv(config["list_rois_primary"])
-LIST_ROIS = df.Index.tolist()
+df = pd.read_csv(config["list_MUSE_ISTAGHarmonized"])
+LIST_HMUSE_NAMES = df.Name.tolist()
 
 ###################################
 ## Function definitions
@@ -18,48 +11,49 @@ LIST_ROIS = df.Index.tolist()
 ###################################
 ## Rules
 rule ALL:
-    input:expand("../../data/SmileGAN/s{stype}/r{rtype}/pred/NiChart_DLMUSE_harmonized_normICV_r{rtype}_hISTAG_eval.csv", stype = LIST_SmileGAN, rtype = ['singleROI'])
-    
+    #input:"../../data/ISTAG_Data/SmileGAN/ISTAG_HMUSE_trainADNI2_BL.csv"
+    input:"../../data/ISTAG_Data/SmileGAN/ISTAG_HMUSE_testADNI_all.csv"
     
 #################################    
 ## Prep data
 
-rule merge_demog_and_data:
-    '''
-    Merge demog and data
-    '''
-    input:
-        demog="../../data/data_consolidated/NiChart_demog.csv",
-        data="../../data/data_consolidated/NiChart_DLMUSE_{dtype}.csv",
-    params:
-        key_var="MRID"
-    output:
-        "../../data/SmileGAN/prep/NiChart_DLMUSE+Demog_{dtype}.csv",
-    resources:
-        mem_mb=8000
-    shell:
-        "echo python utils/util_merge_two.py {input} {params} {output};"
-        "python utils/util_merge_two.py {input} {params} {output}"
-
 rule select_sample:
     '''
     Select spare sample
-    - Select samples (from the centiles sample list)
-    - Select variables (a set of input variables + ROI names from list)
+    - Select samples
+    - Select variables
     '''
     input:
-        sample="../../data/samples/sample_SmileGAN_{stype}_all.csv",
-        data="../../data/SmileGAN/prep/NiChart_DLMUSE+Demog_{dtype}.csv",
-        rois="../../config/list_MUSE_{rtype}.csv",
+        sample="../../data/samples/sample_SmileGAN_{stype}.csv",
+        data="../../data/ISTAG_Data/InitConsolidated/istaging_MRIDOnly.csv",
+        rois="../../config/list_MUSE_ISTAGHarmonized.csv",
     params:
-        vars='MRID,Age,Sex',
+        vars='MRID,Age,Sex,Diagnosis,DX_Binary',
     output:
-        "../../data/SmileGAN/s{stype}/r{rtype}/data/NiChart_DLMUSE_{dtype}_all.csv"
+        temp("../../data/SmileGAN/prep/SmileGAN_{stype}.csv")
     resources:
         mem_mb=8000
     shell:
         "echo python utils/util_select_sample.py {input} {params} {output}; "
         "python utils/util_select_sample.py {input} {params} {output}"
+
+rule prep_smilegan_input:
+    '''
+    Split input data into demog and roi files
+    '''
+    input:
+        "../../data/SmileGAN/prep/SmileGAN_{stype}.csv",
+    output:
+        roi="../../data/SmileGAN/data/SmileGAN_{stype}_rois.csv",
+        demog="../../data/SmileGAN/data/SmileGAN_{stype}_demog.csv",
+    resources:
+        mem_mb=8000
+    shell:
+        "echo python utils/util_prep_data_smilegan.py {input} {output}; "
+        "python utils/util_prep_data_smilegan.py {input} {output}"
+
+#################################    
+## Run training
 
 rule SmileGAN_train:
     '''

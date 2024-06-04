@@ -1,0 +1,40 @@
+
+configfile: "../../config/config.yaml"
+
+## Read lists
+import pandas as pd
+df = pd.read_csv(config["list_MUSE_ISTAGHarmonized"])
+LIST_HMUSE_NAMES = df.Name.tolist()
+
+###################################
+## Function definitions
+
+###################################
+## Rules
+rule ALL:
+    #input:"../../data/ISTAG_Data/SmileGAN/ISTAG_HMUSE_trainADNI2_BL.csv"
+    input:"../../data/ISTAG_Data/SmileGAN/ISTAG_HMUSE_testADNI_all.csv"
+    
+#################################    
+## Prep data
+
+rule select_sample:
+    '''
+    Select spare sample
+    - Select samples
+    - Select variables
+    '''
+    input:
+        sample="../../data/samples/sample_SmileGAN_{stype}.csv",
+        data="../../data/ISTAG_Data/InitConsolidated/istaging_MRIDOnly.csv",
+        rois="../../config/list_MUSE_ISTAGHarmonized.csv",
+    params:
+        vars='MRID,Age,Sex,Diagnosis,DX_Binary',
+    output:
+        "../../data/ISTAG_Data/SmileGAN/ISTAG_HMUSE_{stype}.csv"
+    resources:
+        mem_mb=8000
+    shell:
+        "echo python utils/util_select_sample.py {input} {params} {output}; "
+        "python utils/util_select_sample.py {input} {params} {output}"
+
