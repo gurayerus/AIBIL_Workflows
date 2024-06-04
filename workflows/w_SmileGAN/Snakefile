@@ -13,8 +13,9 @@ LIST_HMUSE_NAMES = df.Name.tolist()
 rule ALL:
     #input:"../../data/SmileGAN/prep/SmileGAN_testADNI_all.csv"
     #input:"../../data/SmileGAN/prep/SmileGAN_trainADNI2_BL.csv"
-    input:"../../data/SmileGAN/data/SmileGAN_testADNI_all_demog.csv"
+    #input:"../../data/SmileGAN/data/SmileGAN_testADNI_all_demog.csv"
     #input:"../../data/SmileGAN/data/SmileGAN_trainADNI2_BL_demog.csv"
+    input:"../../data/SmileGAN/model/SmileGAN_trainADNI2_BL/converged_model_fold2"
     
 #################################    
 ## Prep data
@@ -57,21 +58,24 @@ rule prep_smilegan_input:
 #################################    
 ## Run training
 
-rule smilegan_train:
+rule smilegan_train_folds:
     '''
     Train SmileGAN model
     '''
     input:
-        "../../data/SmileGAN/s{stype}/r{rtype}/data/NiChart_DLMUSE_{dtype}_train.csv"
+        demog="../../data/SmileGAN/data/SmileGAN_{stype}_demog.csv",
+        roi="../../data/SmileGAN/data/SmileGAN_{stype}_rois.csv",
     output:
-        "../../data/SmileGAN/s{stype}/r{rtype}/models/NiChart_DLMUSE_{dtype}_model.pkl.gz"
+        "../../data/SmileGAN/model/SmileGAN_{stype}/converged_model_fold{fold}"
+    params:
+        ncluster = '4'
+        fold={wildcards.fold}
+        numfold='20'
     resources:
         mem_mb=16000
     shell:
-        "echo spare_score -a train -i {input} -o {output} -kv {params.vkey} -t {wildcards.stype} "
-        "-mt SVM -k linear -pg 1; "
-        "spare_score -a train -i {input} -o {output} -kv {params.vkey} -t {wildcards.stype} "
-        "-mt SVM -k linear -pg 1"
+        "echo bash ./utils/util_run_smilegan_train_folds {input} {params} {output}; " 
+        "bash ./utils/util_run_smilegan_train_folds {input} {params} {output}" 
         
 rule SmileGAN_test:
     '''
