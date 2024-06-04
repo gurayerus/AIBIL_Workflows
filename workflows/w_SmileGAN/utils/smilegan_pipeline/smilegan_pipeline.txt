@@ -1,0 +1,3 @@
+1. sh prepare.sh
+2. change parameters and directories in run_model.py; try different values of mu and use the result with the highest ARI.
+3. sh submit.sh, which will submit parellel jobs. After all jobs finished, you should find a file called clustering_result.csv in the output directory
