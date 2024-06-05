@@ -1,0 +1,119 @@
+configfile: "../../config/config.yaml"
+
+## Read lists
+import pandas as pd
+df = pd.read_csv(config["list_MUSE_ISTAGHarmonized"])
+LIST_HMUSE_NAMES = df.Name.tolist()
+
+###################################
+## Function definitions
+
+###################################
+## Rules
+rule ALL:
+    #input:"../../data/SmileGAN/prep/SmileGAN_testADNI_all.csv"
+    #input:"../../data/SmileGAN/prep/SmileGAN_trainADNI2_BL.csv"
+    #input:"../../data/SmileGAN/data/SmileGAN_testADNI_all_demog.csv"
+    #input:"../../data/SmileGAN/data/SmileGAN_trainADNI2_BL_demog.csv"
+    input:"../../data/SmileGAN/model/SmileGAN_trainADNI2_BL/converged_model_fold2"
+    
+#################################    
+## Prep data
+
+rule select_sample:
+    '''
+    Select spare sample
+    - Select samples
+    - Select variables
+    '''
+    input:
+        sample="../../data/samples/sample_SmileGAN_{stype}.csv",
+        data="../../data/ISTAG_Data/InitConsolidated/istaging_MRIDOnly.csv",
+        rois="../../config/list_MUSE_ISTAGHarmonizedSingle.csv",
+    params:
+        vars='MRID,Age,Sex,DX_Binary',
+    output:
+        "../../data/SmileGAN/prep/SmileGAN_{stype}.csv"
+    resources:
+        mem_mb=8000
+    shell:
+        "echo python utils/util_select_sample.py {input} {params} {output}; "
+        "python utils/util_select_sample.py {input} {params} {output}"
+
+rule prep_smilegan_input:
+    '''
+    Split input data into demog and roi files
+    '''
+    input:
+        "../../data/SmileGAN/prep/SmileGAN_{stype}.csv",
+    output:
+        demog="../../data/SmileGAN/data/SmileGAN_{stype}_demog.csv",
+        roi="../../data/SmileGAN/data/SmileGAN_{stype}_rois.csv",
+    resources:
+        mem_mb=8000
+    shell:
+        "echo python utils/util_prep_data_smilegan.py {input} {output}; "
+        "python utils/util_prep_data_smilegan.py {input} {output}"
+
+#################################    
+## Run training
+
+rule smilegan_train_folds:
+    '''
+    Train SmileGAN model
+    '''
+    input:
+        demog="../../data/SmileGAN/data/SmileGAN_{stype}_demog.csv",
+        roi="../../data/SmileGAN/data/SmileGAN_{stype}_rois.csv",
+    output:
+        "../../data/SmileGAN/model/SmileGAN_{stype}/converged_model_fold{fold}"
+    params:
+        ncluster = '4',
+        fold="{fold}",
+        numfold='20'
+    resources:
+        mem_mb=16000
+    shell:
+        "echo bash ./utils/util_run_smilegan_train_folds {input} {params} {output}; " 
+        "bash ./utils/util_run_smilegan_train_folds {input} {params} {output}" 
+        
+rule SmileGAN_test:
+    '''
+    Test SmileGAN model using the split test sample
+    '''
+    input:
+        data="../../data/SmileGAN/s{stype}/r{rtype}/data/NiChart_DLMUSE_{dtype}_test.csv",
+        mdl="../../data/SmileGAN/s{stype}/r{rtype}/models/NiChart_DLMUSE_{dtype}_model.pkl.gz"
+    output:
+        csv="../../data/SmileGAN/s{stype}/r{rtype}/pred/NiChart_DLMUSE_{dtype}_pred.csv"
+    resources:
+        mem_mb=16000
+    shell:
+        "echo spare_score -a test -i {input.data} -m {input.mdl} -o {output.csv}; "
+        "spare_score -a test -i {input.data} -m {input.mdl} -o {output.csv}"
+
+rule SmileGAN_eval:
+    '''
+    Evaluate accuracy on test sample
+    '''
+    input:
+        data="../../data/SmileGAN/s{stype}/r{rtype}/data/NiChart_DLMUSE_{dtype}_test.csv",
+        pred="../../data/SmileGAN/s{stype}/r{rtype}/pred/NiChart_DLMUSE_{dtype}_pred.csv"
+    output:
+        csv="../../data/SmileGAN/s{stype}/r{rtype}/pred/NiChart_DLMUSE_{dtype}_eval.csv"
+    resources:
+        mem_mb=8000
+    shell:
+        "echo python utils/util_eval_spare.py {input} {wildcards.stype} {output}; "
+        "python utils/util_eval_spare.py {input} {wildcards.stype} {output}"
+
+#rule copy_model:
+    #'''
+    #Copy model to models folder
+    #'''
+    #input:
+        #"../../data/SmileGAN/s_{stype}/models/NiChart_DLMUSE_{dtype}_model.pkl.gz"
+    #output:
+        #"../../models/SmileGAN/SmileGAN_{stype}_NiChart_DLMUSE_{dtype}_model.pkl.gz"
+    #shell:
+        #"cp {input} {output}"
