@@ -11,11 +11,11 @@ LIST_HMUSE_NAMES = df.Name.tolist()
 ###################################
 ## Rules
 rule ALL:
-    #input:"../../data/SmileGAN/prep/SmileGAN_testADNI_all.csv"
-    #input:"../../data/SmileGAN/prep/SmileGAN_trainADNI2_BL.csv"
-    #input:"../../data/SmileGAN/data/SmileGAN_testADNI_all_demog.csv"
-    #input:"../../data/SmileGAN/data/SmileGAN_trainADNI2_BL_demog.csv"
-    input:"../../data/SmileGAN/model/SmileGAN_trainADNI2_BL/converged_model_fold2"
+    #input:"../../data/SmileGAN/prep/SmileGAN_testADNIAll.csv"
+    #input:"../../data/SmileGAN/prep/SmileGAN_trainADNI2BL.csv"
+    #input:"../../data/SmileGAN/data/SmileGAN_testADNIAll_demog.csv"
+    #input:"../../data/SmileGAN/data/SmileGAN_trainADNI2BL_demog.csv"
+    input:"../../data/SmileGAN/model/SmileGAN_trainADNI2BL/converged_model_fold2"
     
 #################################    
 ## Prep data
@@ -74,8 +74,8 @@ rule smilegan_train_folds:
     resources:
         mem_mb=16000
     shell:
-        "echo bash ./utils/util_run_smilegan_train_folds {input} {params} {output}; " 
-        "bash ./utils/util_run_smilegan_train_folds {input} {params} {output}" 
+        "echo bash ./utils/util_smilegan_train_folds.sh {input} {params} {output}; " 
+        "bash ./utils/util_smilegan_train_folds.sh {input} {params} {output}" 
         
 rule SmileGAN_test:
     '''

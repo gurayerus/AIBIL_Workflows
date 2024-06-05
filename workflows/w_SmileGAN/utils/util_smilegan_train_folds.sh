@@ -9,7 +9,7 @@ outmdl=`realpath ${6}`
 
 outdir=`basedir $outmdl`
 
-cmd="python ./utils/smilegan_train_model --train_data $in_toi --covariate_data $in_demog -output_dir $outdir --ncluster $n_cluster --start_fold $fold --fold_number $numfold"
+cmd="python ./utils/smilegan_train_model.py --train_data $in_toi --covariate_data $in_demog -output_dir $outdir --ncluster $n_cluster --start_fold $fold --fold_number $numfold"
 
 echo "About to run $cmd"
 $cmd

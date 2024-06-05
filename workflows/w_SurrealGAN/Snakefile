@@ -11,11 +11,11 @@ LIST_HMUSE_NAMES = df.Name.tolist()
 ###################################
 ## Rules
 rule ALL:
-    #input:"../../data/SmileGAN/prep/SmileGAN_testADNI_all.csv"
-    #input:"../../data/SmileGAN/prep/SmileGAN_trainADNI2_BL.csv"
-    #input:"../../data/SmileGAN/data/SmileGAN_testADNI_all_demog.csv"
-    #input:"../../data/SmileGAN/data/SmileGAN_trainADNI2_BL_demog.csv"
-    input:"../../data/SmileGAN/model/SmileGAN_trainADNI2_BL/converged_model_fold2"
+    #input:"../../data/SurrealGAN/prep/SurrealGAN_testISTAG.csv"
+    #input:"../../data/SurrealGAN/prep/SurrealGAN_trainISTAG.csv"
+    #input:"../../data/SurrealGAN/data/SurrealGAN_testISTAG_demog.csv"
+    input:"../../data/SurrealGAN/data/SurrealGAN_trainISTAG_demog.csv"
+    #input:"../../data/SurrealGAN/model/SurrealGAN_trainADNI2_BL/converged_model_fold2"
     
 #################################    
 ## Prep data
@@ -27,46 +27,46 @@ rule select_sample:
     - Select variables
     '''
     input:
-        sample="../../data/samples/sample_SmileGAN_{stype}.csv",
+        sample="../../data/samples/sample_SurrealGAN_{stype}.csv",
         data="../../data/ISTAG_Data/InitConsolidated/istaging_MRIDOnly.csv",
         rois="../../config/list_MUSE_ISTAGHarmonizedSingle.csv",
     params:
-        vars='MRID,Age,Sex,DX_Binary',
+        vars='MRID,Age,Sex,DX_Binary,DLICV_baseline,participant_id,Diagnosis',
     output:
-        "../../data/SmileGAN/prep/SmileGAN_{stype}.csv"
+        "../../data/SurrealGAN/prep/SurrealGAN_{stype}.csv"
     resources:
         mem_mb=8000
     shell:
         "echo python utils/util_select_sample.py {input} {params} {output}; "
         "python utils/util_select_sample.py {input} {params} {output}"
 
-rule prep_smilegan_input:
+rule prep_surrealgan_train_data:
     '''
     Split input data into demog and roi files
     '''
     input:
-        "../../data/SmileGAN/prep/SmileGAN_{stype}.csv",
+        "../../data/SurrealGAN/prep/SurrealGAN_{stype}.csv",
     output:
-        demog="../../data/SmileGAN/data/SmileGAN_{stype}_demog.csv",
-        roi="../../data/SmileGAN/data/SmileGAN_{stype}_rois.csv",
+        demog="../../data/SurrealGAN/data/SurrealGAN_{stype}_demog.csv",
+        roi="../../data/SurrealGAN/data/SurrealGAN_{stype}_rois.csv",
     resources:
         mem_mb=8000
     shell:
-        "echo python utils/util_prep_data_smilegan.py {input} {output}; "
-        "python utils/util_prep_data_smilegan.py {input} {output}"
+        "echo python utils/util_prep_surrealgan_data.py {input} {output}; "
+        "python utils/util_prep_surrealgan_data.py {input} {output}"
 
 #################################    
 ## Run training
 
 rule smilegan_train_folds:
     '''
-    Train SmileGAN model
+    Train SurrealGAN model
     '''
     input:
-        demog="../../data/SmileGAN/data/SmileGAN_{stype}_demog.csv",
-        roi="../../data/SmileGAN/data/SmileGAN_{stype}_rois.csv",
+        demog="../../data/SurrealGAN/data/SurrealGAN_{stype}_demog.csv",
+        roi="../../data/SurrealGAN/data/SurrealGAN_{stype}_rois.csv",
     output:
-        "../../data/SmileGAN/model/SmileGAN_{stype}/converged_model_fold{fold}"
+        "../../data/SurrealGAN/model/SurrealGAN_{stype}/converged_model_fold{fold}"
     params:
         ncluster = '4',
         fold="{fold}",
@@ -77,30 +77,30 @@ rule smilegan_train_folds:
         "echo bash ./utils/util_run_smilegan_train_folds {input} {params} {output}; " 
         "bash ./utils/util_run_smilegan_train_folds {input} {params} {output}" 
         
-rule SmileGAN_test:
+rule SurrealGAN_test:
     '''
-    Test SmileGAN model using the split test sample
+    Test SurrealGAN model using the split test sample
     '''
     input:
-        data="../../data/SmileGAN/s{stype}/r{rtype}/data/NiChart_DLMUSE_{dtype}_test.csv",
-        mdl="../../data/SmileGAN/s{stype}/r{rtype}/models/NiChart_DLMUSE_{dtype}_model.pkl.gz"
+        data="../../data/SurrealGAN/s{stype}/r{rtype}/data/NiChart_DLMUSE_{dtype}_test.csv",
+        mdl="../../data/SurrealGAN/s{stype}/r{rtype}/models/NiChart_DLMUSE_{dtype}_model.pkl.gz"
     output:
-        csv="../../data/SmileGAN/s{stype}/r{rtype}/pred/NiChart_DLMUSE_{dtype}_pred.csv"
+        csv="../../data/SurrealGAN/s{stype}/r{rtype}/pred/NiChart_DLMUSE_{dtype}_pred.csv"
     resources:
         mem_mb=16000
     shell:
         "echo spare_score -a test -i {input.data} -m {input.mdl} -o {output.csv}; "
         "spare_score -a test -i {input.data} -m {input.mdl} -o {output.csv}"
 
-rule SmileGAN_eval:
+rule SurrealGAN_eval:
     '''
     Evaluate accuracy on test sample
     '''
     input:
-        data="../../data/SmileGAN/s{stype}/r{rtype}/data/NiChart_DLMUSE_{dtype}_test.csv",
-        pred="../../data/SmileGAN/s{stype}/r{rtype}/pred/NiChart_DLMUSE_{dtype}_pred.csv"
+        data="../../data/SurrealGAN/s{stype}/r{rtype}/data/NiChart_DLMUSE_{dtype}_test.csv",
+        pred="../../data/SurrealGAN/s{stype}/r{rtype}/pred/NiChart_DLMUSE_{dtype}_pred.csv"
     output:
-        csv="../../data/SmileGAN/s{stype}/r{rtype}/pred/NiChart_DLMUSE_{dtype}_eval.csv"
+        csv="../../data/SurrealGAN/s{stype}/r{rtype}/pred/NiChart_DLMUSE_{dtype}_eval.csv"
     resources:
         mem_mb=8000
     shell:
@@ -112,8 +112,8 @@ rule SmileGAN_eval:
     #Copy model to models folder
     #'''
     #input:
-        #"../../data/SmileGAN/s_{stype}/models/NiChart_DLMUSE_{dtype}_model.pkl.gz"
+        #"../../data/SurrealGAN/s_{stype}/models/NiChart_DLMUSE_{dtype}_model.pkl.gz"
     #output:
-        #"../../models/SmileGAN/SmileGAN_{stype}_NiChart_DLMUSE_{dtype}_model.pkl.gz"
+        #"../../models/SurrealGAN/SurrealGAN_{stype}_NiChart_DLMUSE_{dtype}_model.pkl.gz"
     #shell:
         #"cp {input} {output}"
