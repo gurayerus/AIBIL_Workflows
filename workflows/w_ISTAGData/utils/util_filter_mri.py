@@ -6,7 +6,7 @@ import sys
 def filter_mri(in_csv, out_csv):
 
     ## Read data
-    df = pd.read_csv(in_csv)
+    df = pd.read_csv(in_csv, dtype = {'MRID':str, 'PTID':str})
 
     ## Drop mrid null
     dfout = df[df.MRID.isna()==False]

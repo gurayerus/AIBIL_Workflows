@@ -12,9 +12,8 @@ LIST_HMUSE_NAMES = df.Name.tolist()
 ## Rules
 rule ALL:
     #input:"../../data/SurrealGAN/prep/SurrealGAN_testISTAG.csv"
-    #input:"../../data/SurrealGAN/prep/SurrealGAN_trainISTAG.csv"
-    #input:"../../data/SurrealGAN/data/SurrealGAN_testISTAG_demog.csv"
-    input:"../../data/SurrealGAN/data/SurrealGAN_trainISTAG_demog.csv"
+    #input:"../../data/SurrealGAN/prep/SurrealGAN_NatureMed_train.csv"
+    input:"../../data/SurrealGAN/data/SurrealGAN_NatureMed_train_demog.csv"
     #input:"../../data/SurrealGAN/model/SurrealGAN_trainADNI2_BL/converged_model_fold2"
     
 #################################    
@@ -22,13 +21,11 @@ rule ALL:
 
 rule select_sample:
     '''
-    Select spare sample
-    - Select samples
-    - Select variables
+    Select surrealgan sample
     '''
     input:
-        sample="../../data/samples/sample_SurrealGAN_{stype}.csv",
-        data="../../data/ISTAG_Data/InitConsolidated/istaging_MRIDOnly.csv",
+        sample="../../data/samples/SurrealGAN/sample_SurrealGAN_{stype}.csv",
+        data="../../data/ISTAG_Data/init_csv/istaging_v1.2_selvars.csv",
         rois="../../config/list_MUSE_ISTAGHarmonizedSingle.csv",
     params:
         vars='MRID,Age,Sex,DX_Binary,DLICV_baseline,participant_id,Diagnosis',

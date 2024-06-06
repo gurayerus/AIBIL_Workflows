@@ -6,7 +6,7 @@ import sys
 def sel_vars(in_pkl, out_csv):
 
     ## Read data
-    df = pd.read_csv(in_csv)
+    df = pd.read_csv(in_csv, dtype = {'MRID':str, 'PTID':str})
 
     ## Sel vars
     selvars = ['MRID', 'PTID', 'Date', 'participant_id', 'Visit_Code', 'Phase', 'Age', 'Sex', 'Study', 'Delta_Baseline', 'Education_Years', 'APOE_Genotype', 

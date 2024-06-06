@@ -8,6 +8,10 @@ def pkl_to_csv(in_pkl, out_csv):
     ## Read data
     df = pd.read_pickle(in_pkl)
 
+    ## Set data type for ID columns
+    df['MRID'] = df.MRID.astype(str)
+    df['PTID'] = df.PTID.astype(str)
+
     ## Write output
     df.to_csv(out_csv, index = False)
 

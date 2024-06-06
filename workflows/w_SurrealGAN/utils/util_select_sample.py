@@ -15,8 +15,8 @@ def select_sample(in_sample, in_csv, in_rois, in_vars, out_csv):
     """
     
     # Read input files
-    df = pd.read_csv(in_csv)
-    dfs = pd.read_csv(in_sample)
+    df = pd.read_csv(in_csv, dtype = {'MRID':str, 'participant_id':str})
+    dfs = pd.read_csv(in_sample, dtype = {'MRID':str, 'participant_id':str})
     dfr = pd.read_csv(in_rois)
 
     # Convert columns of dataframe to str (to handle numeric ROI indices)
