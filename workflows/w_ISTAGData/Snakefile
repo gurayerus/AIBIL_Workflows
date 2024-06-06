@@ -13,28 +13,53 @@ LIST_HMUSE_NAMES = df.Name.tolist()
 ## Rules
 rule ALL:
     #input:"../../data/ISTAG_Data/SmileGAN/ISTAG_HMUSE_trainADNI2_BL.csv"
-    input:"../../data/ISTAG_Data/SmileGAN/ISTAG_HMUSE_testADNI_all.csv"
+    #input:"../../data/ISTAG_Data/init_csv/istaging_v1.2_all.csv"
+    #input:"../../data/ISTAG_Data/init_csv/istaging_v1.2_mri.csv"
+    input:"../../data/ISTAG_Data/init_csv/istaging_v1.2_selvars.csv"
     
 #################################    
 ## Prep data
 
-rule select_sample:
+#ruleorder: pkl_to_csv > filter_mri
+
+rule pkl_to_csv:
     '''
-    Select spare sample
-    - Select samples
-    - Select variables
+    Convert pkl file to csv
     '''
     input:
-        sample="../../data/samples/sample_SmileGAN_{stype}.csv",
-        data="../../data/ISTAG_Data/InitConsolidated/istaging_MRIDOnly.csv",
-        rois="../../config/list_MUSE_ISTAGHarmonized.csv",
-    params:
-        vars='MRID,Age,Sex,Diagnosis,DX_Binary',
+        "../../data/ISTAG_Data/ISTAGING_Data_Consolidation_2020/{version}/istaging.pkl.gz"
     output:
-        "../../data/ISTAG_Data/SmileGAN/ISTAG_HMUSE_{stype}.csv"
+        "../../data/ISTAG_Data/init_csv/istaging_{version}_all.csv"
     resources:
         mem_mb=8000
     shell:
-        "echo python utils/util_select_sample.py {input} {params} {output}; "
-        "python utils/util_select_sample.py {input} {params} {output}"
+        "echo python utils/util_pkl_to_csv.py {input} {output}; "
+        "python utils/util_pkl_to_csv.py {input} {output} "
 
+rule filter_mri:
+    '''
+    Select only mri data
+    '''
+    input:
+        "../../data/ISTAG_Data/init_csv/istaging_{version}_all.csv"
+    output:
+        "../../data/ISTAG_Data/init_csv/istaging_{version}_mri.csv"
+    resources:
+        mem_mb=8000
+    shell:
+        "echo python utils/util_filter_mri.py {input} {output}; "
+        "python utils/util_filter_mri.py {input} {output} "
+
+rule sel_vars:
+    '''
+    Select only main variables
+    '''
+    input:
+        "../../data/ISTAG_Data/init_csv/istaging_{version}_mri.csv"
+    output:
+        "../../data/ISTAG_Data/init_csv/istaging_{version}_selvars.csv"
+    resources:
+        mem_mb=8000
+    shell:
+        "echo python utils/util_sel_vars.py {input} {output}; "
+        "python utils/util_sel_vars.py {input} {output} "
