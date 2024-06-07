@@ -72,7 +72,7 @@ rule smilegan_train_folds:
         fold="{fold}",
         numfold='20'
     resources:
-        mem_mb=16000
+        mem_mb=32000
     shell:
         "echo bash ./utils/util_smilegan_train_folds.sh {input} {params} {output}; " 
         "bash ./utils/util_smilegan_train_folds.sh {input} {params} {output}" 

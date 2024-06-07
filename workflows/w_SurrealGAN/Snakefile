@@ -22,7 +22,8 @@ rule ALL:
     #input:"../../data/SurrealGAN/data/SurrealGAN_NatureMed_train_demog.csv"
     #input:"../../data/SurrealGAN/data/SurrealGAN_ISTAG_test_demog.csv"
     #input:"../../data/SurrealGAN/model/SurrealGAN_NatureMed/converged_model_fold2"
-    input:expand("../../data/SurrealGAN/model/SurrealGAN_NatureMed/converged_model_fold{foldno}", foldno = LIST_FOLDS)
+    #input:expand("../../data/SurrealGAN/model/SurrealGAN_NatureMed/converged_model_fold{foldno}", foldno = LIST_FOLDS)
+    input:"../../data/SurrealGAN/pred/ISTAG_SurrealGAN_mNatureMedOrig_pred.csv"
     
 #################################    
 ## Prep data
@@ -83,37 +84,6 @@ rule surrealgan_train_folds:
     shell:
         "echo bash ./utils/util_surrealgan_train_folds.sh {input} {params} {output}; " 
         "bash ./utils/util_surrealgan_train_folds.sh {input} {params} {output}" 
-        
-rule surrealgan_test:
-    '''
-    Test SurrealGAN model using the pretrained model
-    '''
-    input:
-        demog="../../data/SurrealGAN/data/SurrealGAN_{stype}_test_demog.csv",
-        roi="../../data/SurrealGAN/data/SurrealGAN_{stype}_test_rois.csv",
-        mdl="../../models/SurrealGAN/surrealgan_model_{mtype}"
-    output:
-        csv="../../data/SurrealGAN/pred/{stype}/pred_m{mtype}.csv"
-    resources:
-        mem_mb=32000
-    shell:
-        "echo bash ./utils/util_surrealgan_test.sh {input} {params} {output}; " 
-        "bash ./utils/util_surrealgan_test.sh {input} {params} {output}" 
-
-rule SurrealGAN_eval:
-    '''
-    Evaluate accuracy on test sample
-    '''
-    input:
-        data="../../data/SurrealGAN/s{stype}/r{rtype}/data/NiChart_DLMUSE_{dtype}_test.csv",
-        pred="../../data/SurrealGAN/s{stype}/r{rtype}/pred/NiChart_DLMUSE_{dtype}_pred.csv"
-    output:
-        csv="../../data/SurrealGAN/s{stype}/r{rtype}/pred/NiChart_DLMUSE_{dtype}_eval.csv"
-    resources:
-        mem_mb=8000
-    shell:
-        "echo python utils/util_eval_spare.py {input} {wildcards.stype} {output}; "
-        "python utils/util_eval_spare.py {input} {wildcards.stype} {output}"
 
 #rule copy_model:
     #'''
@@ -125,3 +95,34 @@ rule SurrealGAN_eval:
         #"../../models/SurrealGAN/SurrealGAN_{stype}_NiChart_DLMUSE_{dtype}_model.pkl.gz"
     #shell:
         #"cp {input} {output}"
+        
+rule surrealgan_test:
+    '''
+    Test SurrealGAN model using the pretrained model
+    '''
+    input:
+        demog="../../data/SurrealGAN/data/SurrealGAN_{stype}_test_demog.csv",
+        roi="../../data/SurrealGAN/data/SurrealGAN_{stype}_test_rois.csv",
+        mdl="../../models/SurrealGAN/surrealgan_model_{mtype}"
+    output:
+        csv="../../data/SurrealGAN/pred/{stype}_SurrealGAN_m{mtype}_pred.csv"
+    resources:
+        mem_mb=32000
+    shell:
+        "echo bash ./utils/util_surrealgan_test.sh {input} {params} {output}; " 
+        "bash ./utils/util_surrealgan_test.sh {input} {params} {output}" 
+
+#rule surrealgan_eval:
+    #'''
+    #Evaluate accuracy on test sample
+    #'''
+    #input:
+        #data="../../data/SurrealGAN/s{stype}/r{rtype}/data/NiChart_DLMUSE_{dtype}_test.csv",
+        #pred="../../data/SurrealGAN/s{stype}/r{rtype}/pred/NiChart_DLMUSE_{dtype}_pred.csv"
+    #output:
+        #csv="../../data/SurrealGAN/s{stype}/r{rtype}/pred/NiChart_DLMUSE_{dtype}_eval.csv"
+    #resources:
+        #mem_mb=8000
+    #shell:
+        #"echo python utils/util_eval_spare.py {input} {wildcards.stype} {output}; "
+        #"python utils/util_eval_spare.py {input} {wildcards.stype} {output}"
