@@ -1,5 +1,7 @@
 configfile: "../../config/config.yaml"
 
+#localrules: reorientLPS
+
 ## Read lists
 import pandas as pd
 df = pd.read_csv(config["list_MUSE_ISTAGHarmonized"])
@@ -71,7 +73,7 @@ rule smilegan_train_folds:
         fold="{fold}",
         numfold='50',
     resources:
-        mem_mb=16000
+        mem_mb=32000
     shell:
         "echo bash ./utils/util_surrealgan_train_folds.sh {input} {params} {output}; " 
         "bash ./utils/util_surrealgan_train_folds.sh {input} {params} {output}" 
