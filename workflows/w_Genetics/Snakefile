@@ -1,0 +1,68 @@
+## Import packages
+import pandas as pd
+import os
+import sys
+
+## Flag to indicate rules that will be run locally (e.g. not submitted to slurm)
+##localrules: rename_muse_rois
+    
+### Report data
+#report: "report/workflow.rst"
+
+## Config file
+configfile: "../../config/config_Genetics.yaml"
+
+###################################
+## Out file names
+
+#OUT_CONFIG = expand("../../data/COMBAT/{vconf}/config/{cname}", cname = ["config_COMBAT.yaml", "list_MUSE_single.csv"], vconf = config["version"])
+
+#OUT_RESULTS = expand("../../data/COMBAT/{vconf}/data/NiChart_{dtype}_{ctype}.csv", dtype = config["roi_types"], ctype = config["corr_types"], vconf = config["version"])
+
+#OUT_FILES = OUT_CONFIG + OUT_RESULTS
+
+OUT_FILES = expand("../../data/Genetics/Genetics_ukbb/make_bed/ukb_chr{chrno}", chrno = ['1', '2', '3'])
+
+print("Target out files:" + '\n' + '\n'.join(OUT_FILES))
+
+###################################
+## Rules
+
+rule ALL:
+    '''
+    First rule: lists the final expected out files
+    '''
+    input: OUT_FILES
+
+rule copy_config:
+    '''
+    Rule for copying config files to output dir
+    '''
+    input:
+        "../../config/{cname}"
+    output:
+        expand("../../data/COMBAT/{vconf}/config/{{cname}}", vconf = config["version"])
+    shell:
+        "cp -v {input} {output}"
+
+rule make_bed:
+    '''
+    Apply make_bed
+    '''
+    input:
+        in_bgen=expand("../../data/{vinit}/Imputation_BGEN/ukb22828_c{{chrno}}_b0_v3.bgen", vinit = config["dir_input"]), 
+        in_sample=expand("../../data/{vinit}/Imputation_Sample/ukb22828_c{{chrno}}_b0_v3_s487253.sample", vinit = config["dir_input"])
+    params:
+        flagref = config["flagref"],
+        maf = config["maf"],
+        geno = '0.03',
+        hwe = '1e-10',
+        mind = '0.03',
+        rmdup = 'force-first',
+        flagmbed = '1'
+    output:
+        "../../data/Genetics/{vconf}/make_bed/ukb_chr{chrno}"
+    resources:
+        mem_mb=8000
+    shell:
+        "bash ./utils/util_make_bed.sh {input} {wildcards.chrno} {params} {output}"

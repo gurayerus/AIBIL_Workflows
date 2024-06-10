@@ -101,9 +101,11 @@ rule surrealgan_test:
     Test SurrealGAN model using the pretrained model
     '''
     input:
-        demog="../../data/SurrealGAN/data/SurrealGAN_{stype}_test_demog.csv",
         roi="../../data/SurrealGAN/data/SurrealGAN_{stype}_test_rois.csv",
+        demog="../../data/SurrealGAN/data/SurrealGAN_{stype}_test_demog.csv",
         mdl="../../models/SurrealGAN/surrealgan_model_{mtype}"
+    params:
+        epoch = '50000',
     output:
         csv="../../data/SurrealGAN/pred/{stype}_SurrealGAN_m{mtype}_pred.csv"
     resources:

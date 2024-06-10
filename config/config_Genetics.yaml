@@ -1,0 +1,9 @@
+version: Genetics_ukbb
+dir_input: UKBB_Genetic/genetic_202107
+flagref: 1
+maf: 0.01
+geno: 0.03
+hwe: 1e-10 
+ming: 0.03
+rmdup: force-first
+flagmbed: 1
