@@ -1,0 +1,4 @@
+version: MUSE_3D_vtest1
+dir_input: InitData_MUSE
+dir_output: MUSE_3D/MUSE_3D_vtest1
+list_rois_all: ../../config/list_MUSE_allROI.csv
