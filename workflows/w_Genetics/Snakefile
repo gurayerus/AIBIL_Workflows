@@ -1,10 +1,8 @@
 ## Import packages
 import pandas as pd
 import os
-import sys
-
 ## Flag to indicate rules that will be run locally (e.g. not submitted to slurm)
-##localrules: rename_muse_rois
+localrules: reorientLPS
     
 ### Report data
 #report: "report/workflow.rst"
@@ -15,15 +13,15 @@ configfile: "../../config/config_Genetics.yaml"
 ###################################
 ## Out file names
 
-#OUT_CONFIG = expand("../../data/COMBAT/{vconf}/config/{cname}", cname = ["config_COMBAT.yaml", "list_MUSE_single.csv"], vconf = config["version"])
+#OUT_CONFIG = expand("../../data/{dir_output}/config/{cname}", cname = ["config_MUSE_3D.yaml", "list_MUSE_all.csv"], dir_output = config["dir_output"])
 
-#OUT_RESULTS = expand("../../data/COMBAT/{vconf}/data/NiChart_{dtype}_{ctype}.csv", dtype = config["roi_types"], ctype = config["corr_types"], vconf = config["version"])
+#OUT_RESULTS = expand("../../data/{dir_output}/{study}/Protocols/MUSE/{mrid}/{mrid}_T1_LPS_N4_brain_muse-ss_fastbc_muse.nii.gz", study = ["Study1"], mrid = ["OAS30001_MR_d0129", "OAS30407_MR_d0061"], dir_output = config["dir_output"])
 
 #OUT_FILES = OUT_CONFIG + OUT_RESULTS
 
-OUT_FILES = expand("../../data/Genetics/Genetics_ukbb/make_bed/ukb_chr{chrno}", chrno = ['1', '2', '3'])
+OUT_FILES = expand("../../data/Genetics/UKBB-Genetic-Processed/make_bed/ukb_chr{chrno}", chrno = ['1', '2', '3'])
 
-print("Target out files:" + '\n' + '\n'.join(OUT_FILES))
+print("Target out files:" + '\n' + '\n'.join(OUT_FILES) + '\n')
 
 ###################################
 ## Rules
@@ -41,17 +39,17 @@ rule copy_config:
     input:
         "../../config/{cname}"
     output:
-        expand("../../data/COMBAT/{vconf}/config/{{cname}}", vconf = config["version"])
+        expand("../../data/{dir_output}/config/{{cname}}", dir_output = config["dir_output"])
     shell:
         "cp -v {input} {output}"
-
+    
 rule make_bed:
     '''
     Apply make_bed
     '''
     input:
-        in_bgen=expand("../../data/{vinit}/Imputation_BGEN/ukb22828_c{{chrno}}_b0_v3.bgen", vinit = config["dir_input"]), 
-        in_sample=expand("../../data/{vinit}/Imputation_Sample/ukb22828_c{{chrno}}_b0_v3_s487253.sample", vinit = config["dir_input"])
+        in_bgen=expand("../../data/{dir_input}/Imputation_BGEN/ukb22828_c{{chrno}}_b0_v3.bgen", dir_input = config["dir_input"]), 
+        in_sample=expand("../../data/{dir_input}/Imputation_Sample/ukb22828_c{{chrno}}_b0_v3_s487253.sample", dir_input = config["dir_input"])
     params:
         flagref = config["flagref"],
         maf = config["maf"],
@@ -61,7 +59,7 @@ rule make_bed:
         rmdup = 'force-first',
         flagmbed = '1'
     output:
-        "../../data/Genetics/{vconf}/make_bed/ukb_chr{chrno}"
+        "../../data/Genetics/{dir_output}/make_bed/ukb_chr{chrno}"
     resources:
         mem_mb=8000
     shell:

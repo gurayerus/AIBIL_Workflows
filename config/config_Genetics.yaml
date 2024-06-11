@@ -1,5 +1,6 @@
 version: Genetics_ukbb
-dir_input: UKBB_Genetic/genetic_202107
+dir_input: InitData_UKBB-Genetic/genetic_202107
+dir_output: Genetics/UKBB-Genetic-Processed
 flagref: 1
 maf: 0.01
 geno: 0.03
