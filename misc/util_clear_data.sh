@@ -17,7 +17,7 @@ if [ "${user_answer}" == 'yes' ]; then
     for ll in $(ls -1 ../input); do
         mkdir ../data/${ll}
         for nn in $(ls -1 ../input/${ll}); do
-            ln -s ../input/${ll}/${nn} ../data/${ll}
+            ln -s ../../input/${ll}/${nn} ../data/${ll}
         done
     done
     echo "Clean data folder created with links to input data!"
