@@ -1,27 +1,16 @@
-## Import packages
-import pandas as pd
-import os
-## Flag to indicate rules that will be run locally (e.g. not submitted to slurm)
-localrules: reorientLPS
-    
-### Report data
-#report: "report/workflow.rst"
-
 ## Config file
 configfile: "../../config/config_Genetics.yaml"
 
 ###################################
 ## Out file names
 
-#OUT_CONFIG = expand("../../data/{dir_output}/config/{cname}", cname = ["config_MUSE_3D.yaml", "list_MUSE_all.csv"], dir_output = config["dir_output"])
+OUT_CONFIG = expand("../../data/{dir_output}/config/{cname}", cname = ["config_Genetics.yaml", "list_MUSE_all.csv"], dir_output = config["dir_output"])
 
-#OUT_RESULTS = expand("../../data/{dir_output}/{study}/Protocols/MUSE/{mrid}/{mrid}_T1_LPS_N4_brain_muse-ss_fastbc_muse.nii.gz", study = ["Study1"], mrid = ["OAS30001_MR_d0129", "OAS30407_MR_d0061"], dir_output = config["dir_output"])
+OUT_RESULTS = expand("../../data/{dir_output}/make_bed/ukb_chr{chrno}", chrno = ['1', '2', '3'],  dir_output = config["dir_output"])
 
-#OUT_FILES = OUT_CONFIG + OUT_RESULTS
+OUT_FILES = OUT_CONFIG + OUT_RESULTS
 
-OUT_FILES = expand("../../data/Genetics/UKBB-Genetic-Processed/make_bed/ukb_chr{chrno}", chrno = ['1', '2', '3'])
-
-print("Target out files:" + '\n' + '\n'.join(OUT_FILES) + '\n')
+#print("Target out files:" + '\n' + '\n'.join(OUT_FILES) + '\n')
 
 ###################################
 ## Rules
@@ -42,7 +31,7 @@ rule copy_config:
         expand("../../data/{dir_output}/config/{{cname}}", dir_output = config["dir_output"])
     shell:
         "cp -v {input} {output}"
-    
+
 rule make_bed:
     '''
     Apply make_bed
@@ -59,7 +48,7 @@ rule make_bed:
         rmdup = 'force-first',
         flagmbed = '1'
     output:
-        "../../data/Genetics/{dir_output}/make_bed/ukb_chr{chrno}"
+        "../../data/{dir_output}/make_bed/ukb_chr{chrno}"
     resources:
         mem_mb=8000
     shell:

@@ -1,0 +1,3 @@
+version: MUSE_3D_vtest1
+dir_input: InitData_BrainTumor
+dir_output: BrainTumor/BrainTumor_vtest1

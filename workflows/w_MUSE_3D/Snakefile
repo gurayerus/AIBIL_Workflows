@@ -12,20 +12,11 @@ configfile: "../../config/config_MUSE_3D.yaml"
 
 OUT_CONFIG = expand("../../data/{dir_output}/config/{cname}", cname = ["config_MUSE_3D.yaml", "list_MUSE_all.csv"], dir_output = config["dir_output"])
 
-#OUT_RESULTS = expand("../../data/{dir_output}/combined/NiChart_{dtype}_{ctype}.csv", dtype = config["roi_types"], ctype = config["corr_types"], dir_output = config["dir_output"])
-
-#OUT_RESULTS = expand("../../data/{dir_output}/{study}/Protocols/ReOrientedLPS/{mrid}/{mrid}_{mod}_LPS.nii.gz", dtype = config["roi_types"], ctype = config["corr_types"], dir_output = config["dir_output"])
-
-#OUT_RESULTS = expand("../../data/{dir_output}/{study}/Protocols/ReOrientedLPS/{mrid}/{mrid}_{mod}_LPS.nii.gz", study = ["Study1"], mrid = ["OAS30001_MR_d0129", "OAS30407_MR_d0061"], mod = ["T1"], dir_output = config["dir_output"])
-
-OUT_RESULTS = expand("../../data/{dir_output}/{study}/Protocols/MUSE/{mrid}/{mrid}_T1_LPS_N4_brain_muse-ss_fastbc_muse.nii.gz", study = ["Study1"], mrid = ["OAS30001_MR_d0129", "OAS30407_MR_d0061"], dir_output = config["dir_output"])
-
-"../../data/{dir_output}/{study}/Protocols/MUSE/{mrid}/{mrid}_T1_LPS_N4_brain_muse-ss_fastbc_muse.nii.gz"
+OUT_RESULTS = expand("../../data/{dir_output}/Study1/Protocols/MUSE/{mrid}/{mrid}_T1_LPS_N4_brain_muse-ss_fastbc_muse.nii.gz", study = ["Study1"], mrid = ["OAS30001_MR_d0129", "OAS30407_MR_d0061"], dir_output = config["dir_output"])
 
 OUT_FILES = OUT_CONFIG + OUT_RESULTS
-#OUT_FILES = OUT_CONFIG
 
-#print("Target out files:" + '\n' + '\n'.join(OUT_FILES) + '\n')
+print("Target out files:" + '\n' + '\n'.join(OUT_FILES) + '\n')
 
 ###################################
 ## Rules
