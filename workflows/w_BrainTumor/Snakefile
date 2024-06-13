@@ -104,7 +104,7 @@ rule to_t1ce_calcmat:
     resources:
         mem_mb=8000,
     shell:
-        "bash ./utils/register_calcmat.sh {input.img} {input.ref} {output}"
+        "bash ./utils/register_calcmat.sh {input} {output}"
 
 rule to_t1ce_applymat:
     """
