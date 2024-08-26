@@ -1,0 +1,98 @@
+configfile: "../../config/config.yaml"
+
+#localrules: reorientLPS
+
+## Read lists
+import pandas as pd
+import numpy as np
+
+df = pd.read_csv(config["list_MUSE_ISTAGHarmonized"])
+LIST_HMUSE_NAMES = df.Name.tolist()
+
+LIST_FOLDS = [str(x) for x in range(1, 10)]
+
+###################################
+## Function definitions
+
+###################################
+## Rules
+rule ALL:
+    input:"../../data/PT2HAC-GAN/pred/pred.csv"
+    
+#################################    
+## Prep data
+
+rule select_sample:
+    '''
+    Select sample
+    '''
+    input:
+        sample="../../data/samples/PT2HC-GAN/sample_PT2HC-GAN.csv",
+        data="../../data/ISTAG_Data/init_csv/istaging_v1.2_selvars.csv",
+        rois="../../config/list_MUSE_ISTAGHarmonizedSingle.csv",
+    params:
+        vars='MRID,Age,Sex,DX_Binary,DLICV_baseline,participant_id,Diagnosis',
+    output:
+        "../../data/PT2HAC-GAN/prep/sel_sample.csv"
+    resources:
+        mem_mb=8000
+    shell:
+        "echo python utils/util_select_sample.py {input} {params} {output}; "
+        "python utils/util_select_sample.py {input} {params} {output}"
+
+rule prep_data:
+    '''
+    Split input data into demog and roi files
+    '''
+    input:
+        "../../data/PT2HAC-GAN/prep/sel_sample.csv",
+    output:
+        demog="../../data/PT2HAC-GAN/data/sel_demog.csv",
+        roi="../../data/PT2HAC-GAN/data/sel_rois.csv",
+    resources:
+        mem_mb=8000
+    shell:
+        "python utils/util_prep_data.py {input} {output}"
+
+#################################    
+## Run training
+rule train_model:
+    '''
+    Train PT2HAC-GAN model
+    '''
+    input:
+        demog="../../data/PT2HAC-GAN/data/sel_demog.csv",
+        roi="../../data/PT2HAC-GAN/data/sel_rois.csv",
+    output:
+        "../../data/PT2HAC-GAN/models/pt2hac_model"
+    params:
+        npattern = '4',
+        #final_saving_epoch = '63000',
+        final_saving_epoch = '6300',
+        fold="{fold}",
+        #numfold='50',
+        numfold='10',
+    resources:
+        mem_mb=32000
+    shell:
+        "bash ./utils/util_pt2hac_train.sh {input} {params} {output}" 
+
+      
+rule apply_test:
+    '''
+    Test PT2HAC-GAN model using the pretrained model
+    '''
+    input:
+        roi="../../data/PT2HAC-GAN/data/sel_rois.csv",
+        demog="../../data/PT2HAC-GAN/data/sel_demog.csv",
+        mdl="../../models/PT2HAC-GAN/pt2hac_model"
+    params:
+        epoch = '50000',
+    output:
+        csv="../../data/PT2HAC-GAN/pred/pred.csv"
+    resources:
+        mem_mb=32000
+    shell:
+        "echo bash ./utils/util_surrealgan_test.sh {input} {params} {output}; " 
+        "bash ./utils/util_surrealgan_test.sh {input} {params} {output}" 
+
